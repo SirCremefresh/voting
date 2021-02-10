@@ -22,7 +22,5 @@ fn main() {
 
     results
         .iter()
-        .for_each(|voting| 
-            println!("{} -----------\n {}", voting.voting_id, voting.name)
-        );
+        .for_each(|voting| println!("{} -----------\n {}", voting.voting_id, voting.name));
 }
