@@ -5,9 +5,9 @@ extern crate diesel;
 pub mod models;
 pub mod schema;
 
-use self::voting::*;
-use self::models::*;
 use self::diesel::prelude::*;
+use self::models::*;
+use self::voting::*;
 
 fn main() {
     use voting::schema::votings::dsl::*;
@@ -19,9 +19,10 @@ fn main() {
         .expect("Error loading posts");
 
     println!("Displaying {} posts", results.len());
-    for post in results {
-        println!("{}", post.voting_id);
-        println!("-----------\n");
-        println!("{}", post.name);
-    }
+
+    results
+        .iter()
+        .for_each(|voting| 
+            println!("{} -----------\n {}", voting.voting_id, voting.name)
+        );
 }
