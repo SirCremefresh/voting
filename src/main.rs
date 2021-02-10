@@ -3,17 +3,22 @@
 #[macro_use]
 extern crate rocket;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use rocket_contrib::json::Json;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 struct Task {
     description: String,
-    complete: bool
+    complete: bool,
 }
 
-#[post("/todo", data = "<task>")]
-fn new(task: Json<Task>) { /* .. */ }
+#[get("/todo")]
+fn new() -> Json<Task> {
+    Json(Task {
+        description: String::from("pussies eater"),
+        complete: true,
+    })
+}
 
 #[get("/")]
 fn index() -> &'static str {
@@ -26,5 +31,5 @@ fn hello(name: String) -> String {
 }
 
 fn main() {
-    rocket::ignite().mount("/", routes![index, hello]).launch();
+    rocket::ignite().mount("/", routes![index, hello,new]).launch();
 }
