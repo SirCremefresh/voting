@@ -3,13 +3,17 @@
 #[macro_use]
 extern crate rocket;
 
-use rocket::http::RawStr;
+use serde::Deserialize;
+use rocket_contrib::json::Json;
 
 #[derive(Deserialize)]
 struct Task {
     description: String,
     complete: bool
 }
+
+#[post("/todo", data = "<task>")]
+fn new(task: Json<Task>) { /* .. */ }
 
 #[get("/")]
 fn index() -> &'static str {
