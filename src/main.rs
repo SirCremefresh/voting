@@ -1,35 +1,27 @@
-#![feature(proc_macro_hygiene, decl_macro)]
-
+extern crate voting;
 #[macro_use]
-extern crate rocket;
+extern crate diesel;
 
-use serde::{Deserialize, Serialize};
-use rocket_contrib::json::Json;
+pub mod models;
+pub mod schema;
 
-#[derive(Deserialize, Serialize)]
-struct Task {
-    description: String,
-    complete: bool,
-}
-
-#[get("/todo")]
-fn new() -> Json<Task> {
-    Json(Task {
-        description: String::from("pussies eater"),
-        complete: true,
-    })
-}
-
-#[get("/")]
-fn index() -> &'static str {
-    "Hello, world!"
-}
-
-#[get("/hello/<name>")]
-fn hello(name: String) -> String {
-    format!("Hello, {}!", name.as_str())
-}
+use self::voting::*;
+use self::models::*;
+use self::diesel::prelude::*;
 
 fn main() {
-    rocket::ignite().mount("/", routes![index, hello,new]).launch();
+    use voting::schema::votings::dsl::*;
+
+    let connection = establish_connection();
+    let results = votings
+        .limit(5)
+        .load::<Voting>(&connection)
+        .expect("Error loading posts");
+
+    println!("Displaying {} posts", results.len());
+    for post in results {
+        println!("{}", post.voting_id);
+        println!("-----------\n");
+        println!("{}", post.name);
+    }
 }
