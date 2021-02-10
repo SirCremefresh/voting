@@ -1,5 +1,7 @@
 CARGO=cargo
 
+DIR_SCRIPTS=./scripts
+
 .PHONY: run
 
 run: fmt test
@@ -19,3 +21,6 @@ clean:
 
 release:
 	$(CARGO) build --release
+
+prepare:
+	$(DIR_SCRIPTS)/docker_compose.sh
