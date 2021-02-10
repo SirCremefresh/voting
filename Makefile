@@ -1,3 +1,4 @@
+#ToDo add disel stuff to run auto up down
 CARGO=cargo
 
 DIR_SCRIPTS=./scripts
