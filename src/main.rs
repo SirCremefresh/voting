@@ -13,14 +13,10 @@ fn main() {
     use voting::schema::votings::dsl::*;
 
     let connection = establish_connection();
-    let results = votings
+    votings
         .limit(5)
         .load::<Voting>(&connection)
-        .expect("Error loading posts");
-
-    println!("Displaying {} posts", results.len());
-
-    results
+        .expect("Error loading posts")
         .iter()
         .for_each(|voting| println!("{} -----------\n {}", voting.voting_id, voting.name));
 }
