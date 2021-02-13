@@ -4,7 +4,8 @@ POST http://localhost:8000/api/votings
 Content-Type: application/json
 
 {
-  "name": "Some Body Oce told me"
+  "name": "Some Body Oce told me",
+  "polls": [],
 }
 
 

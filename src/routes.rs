@@ -1,18 +1,12 @@
 use super::models::*;
 use super::pool::DbConn;
-use super::schema::votings;
 use super::schema::votings::dsl::*;
 
+use crate::utils::{hash_string, generate_uuid};
 use diesel::insert_into;
 use diesel::prelude::*;
-use rocket::logger::error;
-use rocket::request::Form;
 use rocket::response::status::BadRequest;
 use rocket_contrib::json::Json;
-use sha2::{Digest, Sha256};
-use std::borrow::Borrow;
-use std::ptr::null;
-use uuid::Uuid;
 
 #[get("/votings")]
 pub fn get_votings(conn: DbConn) -> Json<Vec<Voting>> {
@@ -24,12 +18,15 @@ pub fn get_votings(conn: DbConn) -> Json<Vec<Voting>> {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct CreateVotingRequest {
     name: String,
+    polls: Vec<CreateVotingPollRequest>,
 }
 
-#[derive(Serialize, Debug)]
-pub struct Poll {
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct CreateVotingPollRequest {
     name: String,
     description: String,
 }
@@ -40,7 +37,6 @@ pub struct CreateVotingResponse {
     voting_id: String,
     #[serde(rename = "adminKey")]
     admin_key: String,
-    polls: Vec<Poll>,
 }
 
 #[post("/votings", format = "json", data = "<input>")]
@@ -57,17 +53,8 @@ pub fn create_voting(
         }
     };
 
-    let admin_key = String::from(
-        Uuid::new_v4()
-            .to_hyphenated()
-            .encode_lower(&mut Uuid::encode_buffer()),
-    );
-
-    let mut hasher = Sha256::new();
-    // write input message
-    hasher.update(admin_key.as_bytes());
-
-    let generated_admin_key_hash = format!("{:X}", hasher.finalize());
+    let admin_key = generate_uuid();
+    let generated_admin_key_hash = hash_string(&admin_key);
 
     let generated_voting_id = insert_into(votings)
         .values((
@@ -81,7 +68,6 @@ pub fn create_voting(
     let create_voting_response = CreateVotingResponse {
         voting_id: generated_voting_id,
         admin_key,
-        polls: Vec::new(),
     };
 
     Ok(Json(create_voting_response))
