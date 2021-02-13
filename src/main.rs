@@ -21,7 +21,7 @@ extern crate r2d2_diesel;
 mod models;
 mod pool;
 mod routes;
-mod schema;
+pub mod schema;
 
 //use diesel;
 use dotenv::dotenv;
@@ -43,6 +43,6 @@ fn main() {
     .expect("Could run migrations");
     rocket::ignite()
         .manage(postgre_connection_poll)
-        .mount("/api", routes![get_votings])
+        .mount("/api", routes![get_votings, create_voting])
         .launch();
 }

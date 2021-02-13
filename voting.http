@@ -1,0 +1,16 @@
+
+### Send POST request with json body
+POST http://localhost:8000/api/votings
+Content-Type: application/json
+
+{
+  "name": "Som"
+}
+### "name": "Some Body Oce told me"
+###
+
+# Get All Votings
+GET http://localhost:8000/api/votings
+Accept: application/json
+
+###
