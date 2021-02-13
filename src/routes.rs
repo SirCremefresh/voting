@@ -5,12 +5,14 @@ use super::schema::votings::dsl::*;
 
 use diesel::insert_into;
 use diesel::prelude::*;
+use rocket::logger::error;
 use rocket::request::Form;
+use rocket::response::status::BadRequest;
 use rocket_contrib::json::Json;
+use sha2::{Digest, Sha256};
 use std::borrow::Borrow;
 use std::ptr::null;
-use rocket::logger::error;
-use rocket::response::status::BadRequest;
+use uuid::Uuid;
 
 #[get("/votings")]
 pub fn get_votings(conn: DbConn) -> Json<Vec<Voting>> {
@@ -21,10 +23,9 @@ pub fn get_votings(conn: DbConn) -> Json<Vec<Voting>> {
         .unwrap()
 }
 
-
 #[derive(Deserialize, Debug)]
 pub struct CreateVotingRequest {
-    name: String, // 5 - 60
+    name: String,
 }
 
 #[derive(Serialize, Debug)]
@@ -43,20 +44,43 @@ pub struct CreateVotingResponse {
 }
 
 #[post("/votings", format = "json", data = "<input>")]
-pub fn create_voting(conn: DbConn, input: Json<CreateVotingRequest>) -> Result<Json<CreateVotingResponse>, BadRequest<String>> {
+pub fn create_voting(
+    conn: DbConn,
+    input: Json<CreateVotingRequest>,
+) -> Result<Json<CreateVotingResponse>, BadRequest<String>> {
     match input.name.len() {
         5...60 => {}
-        _ => return Err(BadRequest(Some(String::from("Name length must be between 5 and 60 characters"))))
+        _ => {
+            return Err(BadRequest(Some(String::from(
+                "Name length must be between 5 and 60 characters",
+            ))));
+        }
     };
 
-    insert_into(votings)
-        .values((name.eq(&input.name)))
-        .execute(&*conn)
+    let admin_key = String::from(
+        Uuid::new_v4()
+            .to_hyphenated()
+            .encode_lower(&mut Uuid::encode_buffer()),
+    );
+
+    let mut hasher = Sha256::new();
+    // write input message
+    hasher.update(admin_key.as_bytes());
+
+    let generated_admin_key_hash = format!("{:X}", hasher.finalize());
+
+    let generated_voting_id = insert_into(votings)
+        .values((
+            name.eq(&input.name),
+            admin_key_hash.eq(generated_admin_key_hash),
+        ))
+        .returning(voting_id)
+        .get_result(&*conn)
         .unwrap();
 
     let create_voting_response = CreateVotingResponse {
-        voting_id: String::from("d"),
-        admin_key: String::from("a"),
+        voting_id: generated_voting_id,
+        admin_key,
         polls: Vec::new(),
     };
 

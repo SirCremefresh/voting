@@ -4,9 +4,10 @@ POST http://localhost:8000/api/votings
 Content-Type: application/json
 
 {
-  "name": "Som"
+  "name": "Some Body Oce told me"
 }
-### "name": "Some Body Oce told me"
+
+
 ###
 
 # Get All Votings
