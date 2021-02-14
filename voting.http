@@ -5,7 +5,12 @@ Content-Type: application/json
 
 {
   "name": "Some Body Oce told me",
-  "polls": [],
+  "polls": [
+    {
+      "name": "String",
+      "description": ""
+    }
+  ]
 }
 
 
