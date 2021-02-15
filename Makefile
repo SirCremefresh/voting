@@ -25,3 +25,6 @@ release:
 
 prepare:
 	$(DIR_SCRIPTS)/docker_compose.sh
+
+db-setup:
+	diesel setup

@@ -4,6 +4,8 @@ services:
   voting_db:
     image: postgres
     environment:
+      POSTGRES_DB: voting
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: example
     ports:
       - 5432:5432
