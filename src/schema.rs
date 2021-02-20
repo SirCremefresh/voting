@@ -1,6 +1,6 @@
 table! {
-    polls (poll_id) {
-        poll_id -> Varchar,
+    polls (id) {
+        id -> Varchar,
         voting_fk -> Varchar,
         name -> Varchar,
         description -> Varchar,
@@ -8,8 +8,8 @@ table! {
 }
 
 table! {
-    votings (voting_id) {
-        voting_id -> Varchar,
+    votings (id) {
+        id -> Varchar,
         admin_key_hash -> Varchar,
         name -> Varchar,
     }
@@ -17,4 +17,7 @@ table! {
 
 joinable!(polls -> votings (voting_fk));
 
-allow_tables_to_appear_in_same_query!(polls, votings,);
+allow_tables_to_appear_in_same_query!(
+    polls,
+    votings,
+);

@@ -21,3 +21,9 @@ GET http://localhost:8000/api/votings
 Accept: application/json
 
 ###
+
+# Get All Votings
+GET http://localhost:8000/api/voting/voring_id2
+Accept: application/json
+
+###

@@ -5,17 +5,17 @@ CREATE
 
 CREATE TABLE votings
 (
-    voting_id      VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id      VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),
     admin_key_hash VARCHAR(64) NOT NULL,
     name           VARCHAR(64) NOT NULL
 );
 
 CREATE TABLE polls
 (
-    poll_id     VARCHAR(36) PRIMARY KEY,
+    id      VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),
     voting_fk   VARCHAR(36) NOT NULL
         CONSTRAINT votings_voting_id_fk
-            REFERENCES votings
+            REFERENCES votings(id)
             ON DELETE CASCADE,
     name        VARCHAR(64) NOT NULL,
     description VARCHAR(64) NOT NULL
