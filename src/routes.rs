@@ -7,43 +7,39 @@ use diesel::prelude::*;
 use rocket::response::status::{BadRequest, NotFound};
 use rocket_contrib::json::Json;
 
-#[get("/voting/voring_id", format = "json")]
-pub fn get_votings(conn: DbConn) -> Json<Vec<(Poll, Voting)>> {
-    use super::schema::polls::dsl::polls;
-    use super::schema::votings::dsl::votings;
-
-    polls
-        .inner_join(votings)
-        .load::<(Poll, Voting)>(&*conn)
-        .map(|xs| Json(xs))
-        .unwrap()
+#[derive(Serialize, Debug)]
+pub struct GetVotingResponse {
+    #[serde(rename = "votingId")]
+    voting_id: String,
+    name: String,
 }
 
-#[get("/voting/voring_id2", format = "json")]
-pub fn get_votings2(conn: DbConn) -> Json<Vec<(Voting, Poll)>> {
-    use super::schema::polls::dsl::polls;
-    use super::schema::votings::dsl::votings;
-
-    votings
-        .inner_join(polls)
-        .load::<(Voting, Poll)>(&*conn)
-        .map(|xs| Json(xs))
-        .unwrap()
+#[derive(Serialize, Debug)]
+pub struct GetVotingPollsResponse {
+    #[serde(rename = "pollId")]
+    poll_id: String,
+    name: String,
+    description: String,
 }
+
 
 #[get("/voting/<voting_id>", format = "json")]
-pub fn get_votings3(conn: DbConn, voting_id: String) -> Result<Json<Vec<(Voting, Poll)>>, NotFound<String>> {
+pub fn get_voting(conn: DbConn, voting_id: String) -> Result<Json<String>, NotFound<String>> {
     use super::schema::polls::dsl::polls;
     use super::schema::votings::dsl::votings;
 
     let voting = match votings
-        .find(String::from("asd"))
-        .execute(&*conn) {
-        Some(voting) => voting,
-        None => Err(NotFound(Some(
-            format!("Voting with id: {} not found.", voting_id),
-        )))
+        .find(&voting_id)
+        .first::<Voting>(&*conn) {
+        Ok(voting) => voting,
+        Err(_e) => return Err(NotFound(
+            format!("Voting with id: {} not found.", voting_id)
+        ))
     };
+
+    println!("{:?}", voting);
+
+    return Ok(Json("asdf".to_string()));
 }
 
 #[derive(Deserialize, Debug)]
