@@ -23,7 +23,7 @@ Accept: application/json
 ###
 
 # Get All Votings
-GET http://localhost:8000/api/voting/be5bd260-27b0-4b65-8b02-cd7493443d98
+GET http://localhost:8000/api/voting/2d54576c-bed3-4701-bff9-0731da077b42
 Accept: application/json
 
 ###

@@ -12,6 +12,7 @@ pub struct GetVotingResponse {
     #[serde(rename = "votingId")]
     voting_id: String,
     name: String,
+    polls: Vec<GetVotingPollsResponse>,
 }
 
 #[derive(Serialize, Debug)]
@@ -24,22 +25,38 @@ pub struct GetVotingPollsResponse {
 
 
 #[get("/voting/<voting_id>", format = "json")]
-pub fn get_voting(conn: DbConn, voting_id: String) -> Result<Json<String>, NotFound<String>> {
-    use super::schema::polls::dsl::polls;
-    use super::schema::votings::dsl::votings;
+pub fn get_voting(conn: DbConn, voting_id: String) -> Result<Json<GetVotingResponse>, NotFound<String>> {
+    use super::schema::votings::dsl::{votings};
 
-    let voting = match votings
+    match votings
         .find(&voting_id)
-        .first::<Voting>(&*conn) {
-        Ok(voting) => voting,
-        Err(_e) => return Err(NotFound(
+        .first::<Voting>(&*conn)
+        .map(|voting| GetVotingResponse {
+            voting_id: voting.id,
+            name: voting.name,
+            polls: get_voting_polls_response(conn, &voting_id),
+        }) {
+        Ok(voting) => Ok(Json(voting)),
+        Err(_e) => Err(NotFound(
             format!("Voting with id: {} not found.", voting_id)
         ))
-    };
+    }
+}
 
-    println!("{:?}", voting);
+fn get_voting_polls_response(conn: DbConn, voting_id: &String) -> Vec<GetVotingPollsResponse> {
+    use super::schema::polls::dsl::{polls, voting_fk};
 
-    return Ok(Json("asdf".to_string()));
+    polls
+        .filter(voting_fk.eq(&voting_id))
+        .load::<Poll>(&*conn)
+        .unwrap()
+        .iter()
+        .map(|poll| GetVotingPollsResponse {
+            poll_id: String::from(&*poll.id),
+            name: String::from(&*poll.name),
+            description: String::from(&*poll.description),
+        })
+        .collect::<Vec<GetVotingPollsResponse>>()
 }
 
 #[derive(Deserialize, Debug)]
