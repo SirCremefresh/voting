@@ -9,6 +9,7 @@ use rocket::request::Request;
 use rocket::response;
 use rocket::response::{Responder, Response};
 use rocket_contrib::json::Json;
+use serde_json::json;
 use std::io::Cursor;
 
 #[derive(Serialize, Debug)]
@@ -36,7 +37,13 @@ pub struct ErrorResponse {
 impl<'r> Responder<'r> for ErrorResponse {
     fn respond_to(self, _: &Request) -> response::Result<'r> {
         Response::build()
-            .sized_body(Cursor::new(self.reason))
+            .sized_body(Cursor::new(
+                json!({
+                    "error": self.reason,
+                    "status": self.status.code
+                })
+                .to_string(),
+            ))
             .status(self.status)
             .header(ContentType::JSON)
             .ok()
