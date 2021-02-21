@@ -4,8 +4,12 @@ use super::pool::DbConn;
 use crate::utils::{generate_uuid, hash_string};
 use diesel::insert_into;
 use diesel::prelude::*;
-use rocket::response::status::{BadRequest, NotFound};
+use rocket::http::{ContentType, Status};
+use rocket::request::Request;
+use rocket::response;
+use rocket::response::{Responder, Response};
 use rocket_contrib::json::Json;
+use std::io::Cursor;
 
 #[derive(Serialize, Debug)]
 pub struct GetVotingResponse {
@@ -23,10 +27,28 @@ pub struct GetVotingPollsResponse {
     description: String,
 }
 
+#[derive(Debug)]
+pub struct ErrorResponse {
+    reason: String,
+    status: Status,
+}
+
+impl<'r> Responder<'r> for ErrorResponse {
+    fn respond_to(self, _: &Request) -> response::Result<'r> {
+        Response::build()
+            .sized_body(Cursor::new(self.reason))
+            .status(self.status)
+            .header(ContentType::JSON)
+            .ok()
+    }
+}
 
 #[get("/voting/<voting_id>", format = "json")]
-pub fn get_voting(conn: DbConn, voting_id: String) -> Result<Json<GetVotingResponse>, NotFound<String>> {
-    use super::schema::votings::dsl::{votings};
+pub fn get_voting(
+    conn: DbConn,
+    voting_id: String,
+) -> Result<Json<GetVotingResponse>, ErrorResponse> {
+    use super::schema::votings::dsl::votings;
 
     match votings
         .find(&voting_id)
@@ -37,9 +59,10 @@ pub fn get_voting(conn: DbConn, voting_id: String) -> Result<Json<GetVotingRespo
             polls: get_voting_polls_response(conn, &voting_id),
         }) {
         Ok(voting) => Ok(Json(voting)),
-        Err(_e) => Err(NotFound(
-            format!("Voting with id: {} not found.", voting_id)
-        ))
+        Err(_e) => Err(ErrorResponse {
+            reason: format!("Voting with id: {} not found.", voting_id),
+            status: Status::NotFound,
+        }),
     }
 }
 
@@ -85,7 +108,7 @@ pub struct CreateVotingResponse {
 pub fn create_voting(
     conn: DbConn,
     input: Json<CreateVotingRequest>,
-) -> Result<Json<CreateVotingResponse>, BadRequest<String>> {
+) -> Result<Json<CreateVotingResponse>, ErrorResponse> {
     validate_create_voting_request(&input)?;
 
     let admin_key = generate_uuid();
@@ -101,20 +124,20 @@ pub fn create_voting(
     Ok(Json(create_voting_response))
 }
 
-fn validate_create_voting_request(
-    input: &Json<CreateVotingRequest>,
-) -> Result<(), BadRequest<String>> {
+fn validate_create_voting_request(input: &Json<CreateVotingRequest>) -> Result<(), ErrorResponse> {
     match input.name.len() {
         5..=60 => Ok(()),
-        _ => Err(BadRequest(Some(String::from(
-            "Name length must be between 5 and 60 characters",
-        )))),
+        _ => Err(ErrorResponse {
+            reason: "Name length must be between 5 and 60 characters".to_string(),
+            status: Status::BadRequest,
+        }),
     }?;
     match input.polls.len() {
         1..=100 => Ok(()),
-        _ => Err(BadRequest(Some(String::from(
-            "Voting must have between 1 and 100 polls",
-        )))),
+        _ => Err(ErrorResponse {
+            reason: "Voting must have between 1 and 100 polls".to_string(),
+            status: Status::BadRequest,
+        }),
     }
 }
 

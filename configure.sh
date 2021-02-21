@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #scripts docker infrastructor
-chomod +x scripts/docker_compose.sh
+chmod +x scripts/docker_compose.sh
 
 #rust infrastructor
 rustup override set nightly
