@@ -39,7 +39,7 @@ impl<'r> Responder<'r> for ErrorResponse {
         Response::build()
             .sized_body(Cursor::new(
                 json!({
-                    "error": self.reason,
+                    "reason": self.reason,
                     "status": self.status.code
                 })
                 .to_string(),
