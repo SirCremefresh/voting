@@ -161,3 +161,27 @@ fn insert_voting(conn: DbConn, voting_name: &String, voting_admin_key_hash: &Str
         .unwrap();
     generated_voting_id
 }
+
+fn insert_poll(
+    conn: DbConn,
+    poll_name: &String,
+    poll_description: &String,
+    poll_voting_fk: &String,
+) -> Result<(), ErrorResponse> {
+    use super::schema::polls::dsl::{description, id, name, polls, voting_fk};
+
+    match insert_into(polls)
+        .values((
+            name.eq(&poll_name),
+            description.eq(&poll_description),
+            voting_fk.eq(&poll_voting_fk),
+        ))
+        .execute(&*conn)
+    {
+        Ok(1) => Ok(()),
+        _ => Err(ErrorResponse {
+            reason: "Could not insert poll".to_string(),
+            status: Status::InternalServerError,
+        }),
+    }
+}
