@@ -132,10 +132,14 @@ pub fn create_voting(
         Ok(voting_id)
     }) {
         Ok(voting_id) => Ok(voting_id),
-        _ => Err(ErrorResponse {
-            reason: "Could not insert voting to database".to_string(),
+        Err(err) => {
+            let error_msg = "Could not insert voting to database".to_string();
+            eprintln!("{}. err: {:?}", error_msg, err);
+            Err(ErrorResponse {
+            reason: error_msg,
             status: Status::InternalServerError,
-        }),
+        })
+    },
     }?;
 
     let create_voting_response = CreateVotingResponse {
