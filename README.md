@@ -9,10 +9,10 @@ type Poll = {
 # Open
 POST: /api/votings: {
     name: string
+    polls: Poll[]
 } -> {
     votingId: string
     adminKey: string
-    polls: Poll[]
 }
 
 # Admin

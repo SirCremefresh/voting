@@ -1,26 +1,49 @@
-extern crate voting;
+#![feature(proc_macro_hygiene, decl_macro)]
+
+#[macro_use]
+extern crate rocket;
+extern crate rocket_contrib;
+
 #[macro_use]
 extern crate diesel;
+#[macro_use]
+extern crate diesel_migrations;
+embed_migrations!("./migrations");
 
-pub mod models;
+extern crate serde;
+extern crate serde_json;
+#[macro_use]
+extern crate serde_derive;
+
+extern crate r2d2;
+extern crate r2d2_diesel;
+
+mod models;
+mod pool;
+mod routes;
 pub mod schema;
+mod utils;
 
-use self::diesel::prelude::*;
-use self::models::*;
-use self::voting::*;
+//use diesel;
+use dotenv::dotenv;
+use std::env;
+
+use routes::*;
 
 fn main() {
-    use voting::schema::votings::dsl::*;
+    dotenv().ok();
 
-    let connection = establish_connection();
-    let results = votings
-        .limit(5)
-        .load::<Voting>(&connection)
-        .expect("Error loading posts");
-
-    println!("Displaying {} posts", results.len());
-
-    results
-        .iter()
-        .for_each(|voting| println!("{} -----------\n {}", voting.voting_id, voting.name));
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let postgre_connection_poll = pool::init(&database_url);
+    embedded_migrations::run(
+        &*postgre_connection_poll
+            .clone()
+            .get()
+            .expect("connection instance"),
+    )
+    .expect("Could run migrations");
+    rocket::ignite()
+        .manage(postgre_connection_poll)
+        .mount("/api", routes![get_voting, create_voting,])
+        .launch();
 }
