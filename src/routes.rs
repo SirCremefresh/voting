@@ -4,6 +4,7 @@ use super::pool::DbConn;
 use crate::utils::{generate_uuid, hash_string};
 use diesel::insert_into;
 use diesel::prelude::*;
+use diesel::result::Error;
 use rocket::http::{ContentType, Status};
 use rocket::request::Request;
 use rocket::response;
@@ -121,7 +122,21 @@ pub fn create_voting(
     let admin_key = generate_uuid();
     let admin_key_hash = hash_string(&admin_key);
 
-    let voting_id = insert_voting(conn, &input.name, &admin_key_hash);
+    let voting_id = match conn.transaction::<String, Error, _>(|| {
+        let voting_id = insert_voting(&conn, &input.name, &admin_key_hash)?;
+
+        for poll in &input.polls {
+            insert_poll(&conn, &poll.name, &poll.description, &voting_id)?;
+        }
+
+        Ok(voting_id)
+    }) {
+        Ok(voting_id) => Ok(voting_id),
+        _ => Err(ErrorResponse {
+            reason: "Could not insert voting to database".to_string(),
+            status: Status::InternalServerError,
+        }),
+    }?;
 
     let create_voting_response = CreateVotingResponse {
         voting_id,
@@ -148,40 +163,35 @@ fn validate_create_voting_request(input: &Json<CreateVotingRequest>) -> Result<(
     }
 }
 
-fn insert_voting(conn: DbConn, voting_name: &String, voting_admin_key_hash: &String) -> String {
+fn insert_voting(
+    conn: &DbConn,
+    voting_name: &String,
+    voting_admin_key_hash: &String,
+) -> QueryResult<String> {
     use super::schema::votings::dsl::{admin_key_hash, id, name, votings};
 
-    let generated_voting_id = insert_into(votings)
+    insert_into(votings)
         .values((
             name.eq(&voting_name),
             admin_key_hash.eq(&voting_admin_key_hash),
         ))
         .returning(id)
-        .get_result(&*conn)
-        .unwrap();
-    generated_voting_id
+        .get_result(&**conn)
 }
 
 fn insert_poll(
-    conn: DbConn,
+    conn: &DbConn,
     poll_name: &String,
     poll_description: &String,
     poll_voting_fk: &String,
-) -> Result<(), ErrorResponse> {
-    use super::schema::polls::dsl::{description, id, name, polls, voting_fk};
+) -> QueryResult<usize> {
+    use super::schema::polls::dsl::{description, name, polls, voting_fk};
 
-    match insert_into(polls)
+    insert_into(polls)
         .values((
             name.eq(&poll_name),
             description.eq(&poll_description),
             voting_fk.eq(&poll_voting_fk),
         ))
-        .execute(&*conn)
-    {
-        Ok(1) => Ok(()),
-        _ => Err(ErrorResponse {
-            reason: "Could not insert poll".to_string(),
-            status: Status::InternalServerError,
-        }),
-    }
+        .execute(&**conn)
 }
