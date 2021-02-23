@@ -75,10 +75,11 @@ pub fn get_voting(
 }
 
 fn get_voting_polls_response(conn: DbConn, voting_id: &String) -> Vec<GetVotingPollsResponse> {
-    use super::schema::polls::dsl::{polls, voting_fk};
+    use super::schema::polls::dsl::{polls, voting_fk, sequenz_number};
 
     polls
         .filter(voting_fk.eq(&voting_id))
+        .order(sequenz_number.asc())
         .load::<Poll>(&*conn)
         .unwrap()
         .iter()
@@ -125,8 +126,8 @@ pub fn create_voting(
     let voting_id = match conn.transaction::<String, Error, _>(|| {
         let voting_id = insert_voting(&conn, &input.name, &admin_key_hash)?;
 
-        for poll in &input.polls {
-            insert_poll(&conn, &poll.name, &poll.description, &voting_id)?;
+        for (i, poll) in (&input.polls).iter().enumerate() {
+            insert_poll(&conn, &poll.name, (i * 10) as i32, &poll.description, &voting_id)?;
         }
 
         Ok(voting_id)
@@ -154,7 +155,7 @@ fn validate_create_voting_request(input: &Json<CreateVotingRequest>) -> Result<(
     match input.name.len() {
         5..=60 => Ok(()),
         _ => Err(ErrorResponse {
-            reason: "Name length must be between 5 and 60 characters".to_string(),
+            reason: "Voting Name length must be between 5 and 60 characters".to_string(),
             status: Status::BadRequest,
         }),
     }?;
@@ -208,14 +209,16 @@ fn insert_voting(
 fn insert_poll(
     conn: &DbConn,
     poll_name: &String,
+    poll_sequenz_number: i32,
     poll_description: &String,
     poll_voting_fk: &String,
 ) -> QueryResult<usize> {
-    use super::schema::polls::dsl::{description, name, polls, voting_fk};
+    use super::schema::polls::dsl::{description, name, sequenz_number, polls, voting_fk};
 
     insert_into(polls)
         .values((
             name.eq(&poll_name),
+            sequenz_number.eq(poll_sequenz_number),
             description.eq(&poll_description),
             voting_fk.eq(&poll_voting_fk),
         ))

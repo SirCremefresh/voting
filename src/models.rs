@@ -11,6 +11,7 @@ pub struct Voting {
 #[derive(Queryable, Serialize, Insertable, PartialEq, Identifiable, Debug)]
 pub struct Poll {
     pub id: String,
+    pub sequenz_number: i32,
     pub voting_fk: String,
     pub name: String,
     pub description: String,

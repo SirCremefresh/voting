@@ -13,6 +13,7 @@ CREATE TABLE votings
 CREATE TABLE polls
 (
     id      VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),
+    sequenz_number INT NOT NULL,
     voting_fk   VARCHAR(36) NOT NULL
         CONSTRAINT votings_voting_id_fk
             REFERENCES votings(id)
