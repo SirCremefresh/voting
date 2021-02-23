@@ -1,55 +1,15 @@
 use super::models::*;
 use super::pool::DbConn;
 
-use crate::utils::{generate_uuid, hash_string};
+use crate::utils::{generate_uuid, hash_string, ErrorResponse};
+use crate::dtos::{GetVotingResponse, GetVotingPollsResponse, CreateVotingRequest, CreateVotingResponse};
+use crate::validators::{validate_create_voting_request};
+
 use diesel::insert_into;
 use diesel::prelude::*;
 use diesel::result::Error;
-use rocket::http::{ContentType, Status};
-use rocket::request::Request;
-use rocket::response;
-use rocket::response::{Responder, Response};
+use rocket::http::Status;
 use rocket_contrib::json::Json;
-use serde_json::json;
-use std::io::Cursor;
-
-#[derive(Serialize, Debug)]
-pub struct GetVotingResponse {
-    #[serde(rename = "votingId")]
-    voting_id: String,
-    name: String,
-    polls: Vec<GetVotingPollsResponse>,
-}
-
-#[derive(Serialize, Debug)]
-pub struct GetVotingPollsResponse {
-    #[serde(rename = "pollId")]
-    poll_id: String,
-    name: String,
-    description: String,
-}
-
-#[derive(Debug)]
-pub struct ErrorResponse {
-    reason: String,
-    status: Status,
-}
-
-impl<'r> Responder<'r> for ErrorResponse {
-    fn respond_to(self, _: &Request) -> response::Result<'r> {
-        Response::build()
-            .sized_body(Cursor::new(
-                json!({
-                    "reason": self.reason,
-                    "status": self.status.code
-                })
-                .to_string(),
-            ))
-            .status(self.status)
-            .header(ContentType::JSON)
-            .ok()
-    }
-}
 
 #[get("/voting/<voting_id>", format = "json")]
 pub fn get_voting(
@@ -72,45 +32,6 @@ pub fn get_voting(
             status: Status::NotFound,
         }),
     }
-}
-
-fn get_voting_polls_response(conn: DbConn, voting_id: &String) -> Vec<GetVotingPollsResponse> {
-    use super::schema::polls::dsl::{polls, voting_fk, sequenz_number};
-
-    polls
-        .filter(voting_fk.eq(&voting_id))
-        .order(sequenz_number.asc())
-        .load::<Poll>(&*conn)
-        .unwrap()
-        .iter()
-        .map(|poll| GetVotingPollsResponse {
-            poll_id: String::from(&*poll.id),
-            name: String::from(&*poll.name),
-            description: String::from(&*poll.description),
-        })
-        .collect::<Vec<GetVotingPollsResponse>>()
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct CreateVotingRequest {
-    name: String,
-    polls: Vec<CreateVotingPollRequest>,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct CreateVotingPollRequest {
-    name: String,
-    description: String,
-}
-
-#[derive(Serialize, Debug)]
-pub struct CreateVotingResponse {
-    #[serde(rename = "votingId")]
-    voting_id: String,
-    #[serde(rename = "adminKey")]
-    admin_key: String,
 }
 
 #[post("/votings", format = "json", data = "<input>")]
@@ -151,43 +72,21 @@ pub fn create_voting(
     Ok(Json(create_voting_response))
 }
 
-fn validate_create_voting_request(input: &Json<CreateVotingRequest>) -> Result<(), ErrorResponse> {
-    match input.name.len() {
-        5..=60 => Ok(()),
-        _ => Err(ErrorResponse {
-            reason: "Voting Name length must be between 5 and 60 characters".to_string(),
-            status: Status::BadRequest,
-        }),
-    }?;
-    match input.polls.len() {
-        1..=100 => Ok(()),
-        _ => Err(ErrorResponse {
-            reason: "Voting must have between 1 and 100 polls".to_string(),
-            status: Status::BadRequest,
-        }),
-    }?;
-    validate_create_voting_polls_request(&input.polls)
-}
+fn get_voting_polls_response(conn: DbConn, voting_id: &String) -> Vec<GetVotingPollsResponse> {
+    use super::schema::polls::dsl::{polls, voting_fk, sequenz_number};
 
-fn validate_create_voting_polls_request(polls: &Vec<CreateVotingPollRequest>) -> Result<(), ErrorResponse> {
-    for poll in polls {
-        match poll.name.len() {
-            5..=60 => Ok(()),
-            _ => Err(ErrorResponse {
-                reason: "Poll Name length must be between 5 and 60 characters".to_string(),
-                status: Status::BadRequest,
-            }),
-        }?;
-        match poll.description.len() {
-            5..=60 => Ok(()),
-            _ => Err(ErrorResponse {
-                reason: "Poll Description length must be between 5 and 60 characters".to_string(),
-                status: Status::BadRequest,
-            }),
-        }?;
-    }
-
-    Ok(())
+    polls
+        .filter(voting_fk.eq(&voting_id))
+        .order(sequenz_number.asc())
+        .load::<Poll>(&*conn)
+        .unwrap()
+        .iter()
+        .map(|poll| GetVotingPollsResponse {
+            poll_id: String::from(&*poll.id),
+            name: String::from(&*poll.name),
+            description: String::from(&*poll.description),
+        })
+        .collect::<Vec<GetVotingPollsResponse>>()
 }
 
 fn insert_voting(

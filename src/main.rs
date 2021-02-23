@@ -23,6 +23,8 @@ mod pool;
 mod routes;
 pub mod schema;
 mod utils;
+mod dtos;
+mod validators;
 
 //use diesel;
 use dotenv::dotenv;
