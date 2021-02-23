@@ -1,5 +1,7 @@
+# A documentation for this http client can be found at https://marketplace.visualstudio.com/items?itemName=humao.rest-client
 
-### Send POST request with json body
+# Create a voting with two polls
+# @name create_votings
 POST http://localhost:8000/api/votings
 Content-Type: application/json
 
@@ -16,18 +18,10 @@ Content-Type: application/json
     }
   ]
 }
-
-
 ###
 
-# Get All Votings
-GET http://localhost:8000/api/votings
-Accept: application/json
-
-###
-
-# Get All Votings
-GET http://localhost:8000/api/voting/22e9d550-8d5d-4690-aaed-937c183f269b
+# Get The created voting
+GET http://localhost:8000/api/voting/{{create_votings.response.body.$.votingId}}
 Accept: application/json
 
 ###
