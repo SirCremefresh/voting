@@ -1,20 +1,32 @@
 use super::models::*;
 use super::pool::DbConn;
 
-use crate::utils::{generate_uuid, hash_string, ErrorResponse};
-use crate::dtos::{GetVotingResponse, GetVotingPollsResponse, CreateVotingRequest, CreateVotingResponse};
-use crate::validators::{validate_create_voting_request};
+use crate::dtos::{
+    CreateVotingRequest, CreateVotingResponse, GetVotingPollsResponse, GetVotingResponse,
+};
+use crate::utils::{generate_uuid, hash_string, AuthenticatedUser, ErrorResponse};
+use crate::validators::validate_create_voting_request;
 
 use diesel::insert_into;
 use diesel::prelude::*;
 use diesel::result::Error;
 use rocket::http::Status;
+use rocket::request::Request;
 use rocket_contrib::json::Json;
+
+#[catch(401)]
+pub fn unauthorized(_req: &Request) -> ErrorResponse {
+    ErrorResponse {
+        reason: "Could not authenticate user".to_string(),
+        status: Status::Unauthorized,
+    }
+}
 
 #[get("/voting/<voting_id>", format = "json")]
 pub fn get_voting(
     conn: DbConn,
     voting_id: String,
+    _user: AuthenticatedUser,
 ) -> Result<Json<GetVotingResponse>, ErrorResponse> {
     use super::schema::votings::dsl::votings;
 
@@ -48,7 +60,13 @@ pub fn create_voting(
         let voting_id = insert_voting(&conn, &input.name, &admin_key_hash)?;
 
         for (i, poll) in (&input.polls).iter().enumerate() {
-            insert_poll(&conn, &poll.name, (i * 10) as i32, &poll.description, &voting_id)?;
+            insert_poll(
+                &conn,
+                &poll.name,
+                (i * 10) as i32,
+                &poll.description,
+                &voting_id,
+            )?;
         }
 
         Ok(voting_id)
@@ -58,10 +76,10 @@ pub fn create_voting(
             let error_msg = "Could not insert voting to database".to_string();
             eprintln!("{}. err: {:?}", error_msg, err);
             Err(ErrorResponse {
-            reason: error_msg,
-            status: Status::InternalServerError,
-        })
-    },
+                reason: error_msg,
+                status: Status::InternalServerError,
+            })
+        }
     }?;
 
     let create_voting_response = CreateVotingResponse {
@@ -73,7 +91,7 @@ pub fn create_voting(
 }
 
 fn get_voting_polls_response(conn: DbConn, voting_id: &String) -> Vec<GetVotingPollsResponse> {
-    use super::schema::polls::dsl::{polls, voting_fk, sequenz_number};
+    use super::schema::polls::dsl::{polls, sequenz_number, voting_fk};
 
     polls
         .filter(voting_fk.eq(&voting_id))
@@ -112,7 +130,7 @@ fn insert_poll(
     poll_description: &String,
     poll_voting_fk: &String,
 ) -> QueryResult<usize> {
-    use super::schema::polls::dsl::{description, name, sequenz_number, polls, voting_fk};
+    use super::schema::polls::dsl::{description, name, polls, sequenz_number, voting_fk};
 
     insert_into(polls)
         .values((

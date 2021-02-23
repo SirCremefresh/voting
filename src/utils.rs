@@ -1,11 +1,12 @@
-use sha2::{Digest, Sha256};
-use uuid::Uuid;
 use rocket::http::{ContentType, Status};
 use rocket::request::Request;
+use rocket::request::{FromRequest, Outcome};
 use rocket::response;
 use rocket::response::{Responder, Response};
 use serde_json::json;
+use sha2::{Digest, Sha256};
 use std::io::Cursor;
+use uuid::Uuid;
 
 pub fn hash_string(string: &String) -> String {
     let mut hasher = Sha256::new();
@@ -20,7 +21,6 @@ pub fn generate_uuid() -> String {
             .encode_lower(&mut Uuid::encode_buffer()),
     )
 }
-
 
 #[derive(Debug)]
 pub struct ErrorResponse {
@@ -41,5 +41,29 @@ impl<'r> Responder<'r> for ErrorResponse {
             .status(self.status)
             .header(ContentType::JSON)
             .ok()
+    }
+}
+
+#[derive(Debug)]
+pub struct AuthenticatedUser {
+    key_hash: String,
+}
+
+impl<'a, 'r> FromRequest<'a, 'r> for AuthenticatedUser {
+    type Error = ErrorResponse;
+    fn from_request(request: &'a Request<'r>) -> Outcome<AuthenticatedUser, ErrorResponse> {
+        let key = request.headers().get_one("Authorization");
+        match key {
+            Some(key) => Outcome::Success(AuthenticatedUser {
+                key_hash: hash_string(&key.to_string()),
+            }),
+            _ => Outcome::Failure((
+                Status::Unauthorized,
+                ErrorResponse {
+                    reason: "No Authorization header was present".to_string(),
+                    status: Status::Unauthorized,
+                },
+            )),
+        }
     }
 }

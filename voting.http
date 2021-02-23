@@ -23,5 +23,6 @@ Content-Type: application/json
 # Get The created voting
 GET http://localhost:8000/api/voting/{{create_votings.response.body.$.votingId}}
 Accept: application/json
+Authorization: {{create_votings.response.body.$.adminKey}}
 
 ###

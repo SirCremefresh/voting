@@ -18,12 +18,12 @@ extern crate serde_derive;
 extern crate r2d2;
 extern crate r2d2_diesel;
 
+mod dtos;
 mod models;
 mod pool;
 mod routes;
 pub mod schema;
 mod utils;
-mod dtos;
 mod validators;
 
 //use diesel;
@@ -47,5 +47,6 @@ fn main() {
     rocket::ignite()
         .manage(postgre_connection_poll)
         .mount("/api", routes![get_voting, create_voting,])
+        .register(catchers![unauthorized])
         .launch();
 }

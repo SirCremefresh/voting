@@ -1,10 +1,12 @@
-use crate::utils::{ErrorResponse};
-use crate::dtos::{CreateVotingRequest, CreateVotingPollRequest};
+use crate::dtos::{CreateVotingPollRequest, CreateVotingRequest};
+use crate::utils::ErrorResponse;
 
 use rocket::http::Status;
 use rocket_contrib::json::Json;
 
-pub fn validate_create_voting_request(input: &Json<CreateVotingRequest>) -> Result<(), ErrorResponse> {
+pub fn validate_create_voting_request(
+    input: &Json<CreateVotingRequest>,
+) -> Result<(), ErrorResponse> {
     match input.name.len() {
         5..=60 => Ok(()),
         _ => Err(ErrorResponse {
@@ -22,7 +24,9 @@ pub fn validate_create_voting_request(input: &Json<CreateVotingRequest>) -> Resu
     validate_create_voting_polls_request(&input.polls)
 }
 
-fn validate_create_voting_polls_request(polls: &Vec<CreateVotingPollRequest>) -> Result<(), ErrorResponse> {
+fn validate_create_voting_polls_request(
+    polls: &Vec<CreateVotingPollRequest>,
+) -> Result<(), ErrorResponse> {
     for poll in polls {
         match poll.name.len() {
             5..=60 => Ok(()),

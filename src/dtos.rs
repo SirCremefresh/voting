@@ -1,4 +1,3 @@
-
 #[derive(Serialize, Debug)]
 pub struct GetVotingResponse {
     #[serde(rename = "votingId")]
@@ -14,7 +13,6 @@ pub struct GetVotingPollsResponse {
     pub name: String,
     pub description: String,
 }
-
 
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
