@@ -27,4 +27,3 @@ sha2 = "0.9.3"
 
 
 diesel = { version = "1.4.5", features = ["postgres"] }
-diesel-derive-enum = { version = "1", features = ["postgres"] }

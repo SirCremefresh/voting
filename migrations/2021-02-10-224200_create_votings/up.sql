@@ -33,10 +33,6 @@ CREATE TABLE voters
     username VARCHAR(64) NOT NULL
 );
 
-CREATE TYPE decision AS ENUM (
-    'ACCEPT', 'DECLINE', 'ABSTAIN'
-);
-
 CREATE TABLE votes (
     id      VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),
     poll_fk   VARCHAR(36) NOT NULL
@@ -47,5 +43,5 @@ CREATE TABLE votes (
         CONSTRAINT votes_voters_id_fk
             REFERENCES voters(id)
             ON DELETE CASCADE,
-    answer decision NOT NULL
+    answer BOOLEAN NULL
 );

@@ -1,7 +1,4 @@
 table! {
-    use diesel::sql_types::*;
-    use crate::models::Decision;
-
     polls (id) {
         id -> Varchar,
         sequenz_number -> Int4,
@@ -12,9 +9,6 @@ table! {
 }
 
 table! {
-    use diesel::sql_types::*;
-    use crate::models::Decision;
-
     voters (id) {
         id -> Varchar,
         user_key_hash -> Varchar,
@@ -24,21 +18,15 @@ table! {
 }
 
 table! {
-    use diesel::sql_types::*;
-    use crate::models::Decision;
-
     votes (id) {
         id -> Varchar,
         poll_fk -> Varchar,
         voter_fk -> Varchar,
-        answer -> Decision,
+        answer -> Nullable<Bool>,
     }
 }
 
 table! {
-    use diesel::sql_types::*;
-    use crate::models::Decision;
-
     votings (id) {
         id -> Varchar,
         admin_key_hash -> Varchar,
