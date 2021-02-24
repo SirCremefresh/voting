@@ -1,6 +1,6 @@
 table! {
     use diesel::sql_types::*;
-    use crate::models::exports::*;
+    use crate::models::Decision;
 
     polls (id) {
         id -> Varchar,
@@ -13,7 +13,7 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use crate::models::exports::*;
+    use crate::models::Decision;
 
     voters (id) {
         id -> Varchar,
@@ -25,7 +25,7 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use crate::models::exports::*;
+    use crate::models::Decision;
 
     votes (id) {
         id -> Varchar,
@@ -37,7 +37,7 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use crate::models::exports::*;
+    use crate::models::Decision;
 
     votings (id) {
         id -> Varchar,
