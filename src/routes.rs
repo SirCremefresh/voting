@@ -26,24 +26,34 @@ pub fn unauthorized(_req: &Request) -> ErrorResponse {
 pub fn get_voting(
     conn: DbConn,
     voting_id: String,
-    _user: AuthenticatedUser,
+    user: AuthenticatedUser,
 ) -> Result<Json<GetVotingResponse>, ErrorResponse> {
     use super::schema::votings::dsl::votings;
 
-    match votings
+    votings
         .find(&voting_id)
         .first::<Voting>(&*conn)
-        .map(|voting| GetVotingResponse {
-            voting_id: voting.id,
-            name: voting.name,
-            polls: get_voting_polls_response(conn, &voting_id),
-        }) {
-        Ok(voting) => Ok(Json(voting)),
-        Err(_e) => Err(ErrorResponse {
+        .map_err(|_| ErrorResponse {
             reason: format!("Voting with id: {} not found.", voting_id),
             status: Status::NotFound,
-        }),
-    }
+        })
+        .and_then(|voting| {
+            if user.key_hash == voting.admin_key_hash {
+                return Ok(voting);
+            } else {
+                return Err(ErrorResponse {
+                    reason: format!("Admin key is not correct for voting with id: {}", voting.id),
+                    status: Status::Unauthorized,
+                });
+            }
+        })
+        .map(|voting| {
+            Json(GetVotingResponse {
+                voting_id: voting.id,
+                name: voting.name,
+                polls: get_voting_polls_response(conn, &voting_id),
+            })
+        })
 }
 
 #[post("/votings", format = "json", data = "<input>")]

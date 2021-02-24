@@ -46,7 +46,7 @@ impl<'r> Responder<'r> for ErrorResponse {
 
 #[derive(Debug)]
 pub struct AuthenticatedUser {
-    key_hash: String,
+    pub key_hash: String,
 }
 
 impl<'a, 'r> FromRequest<'a, 'r> for AuthenticatedUser {
