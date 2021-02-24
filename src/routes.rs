@@ -39,12 +39,12 @@ pub fn get_voting(
         })
         .and_then(|voting| {
             if user.key_hash == voting.admin_key_hash {
-                return Ok(voting);
+                Ok(voting)
             } else {
-                return Err(ErrorResponse {
+                Err(ErrorResponse {
                     reason: format!("Admin key is not correct for voting with id: {}", voting.id),
                     status: Status::Unauthorized,
-                });
+                })
             }
         })
         .map(|voting| {
