@@ -37,16 +37,7 @@ pub fn get_voting(
             reason: format!("Voting with id: {} not found.", voting_id),
             status: Status::NotFound,
         })
-        .and_then(|voting| {
-            if user.key_hash == voting.admin_key_hash {
-                Ok(voting)
-            } else {
-                Err(ErrorResponse {
-                    reason: format!("Admin key is not correct for voting with id: {}", voting.id),
-                    status: Status::Unauthorized,
-                })
-            }
-        })
+        .and_then(|voting| check_if_voting_admin(voting, &user))
         .map(|voting| {
             Json(GetVotingResponse {
                 voting_id: voting.id,
@@ -66,31 +57,30 @@ pub fn create_voting(
     let admin_key = generate_uuid();
     let admin_key_hash = hash_string(&admin_key);
 
-    let voting_id = match conn.transaction::<String, Error, _>(|| {
-        let voting_id = insert_voting(&conn, &input.name, &admin_key_hash)?;
+    let voting_id = conn
+        .transaction::<String, Error, _>(|| {
+            let voting_id = insert_voting(&conn, &input.name, &admin_key_hash)?;
 
-        for (i, poll) in (&input.polls).iter().enumerate() {
-            insert_poll(
-                &conn,
-                &poll.name,
-                (i * 10) as i32,
-                &poll.description,
-                &voting_id,
-            )?;
-        }
+            for (i, poll) in (&input.polls).iter().enumerate() {
+                insert_poll(
+                    &conn,
+                    &poll.name,
+                    (i * 10) as i32,
+                    &poll.description,
+                    &voting_id,
+                )?;
+            }
 
-        Ok(voting_id)
-    }) {
-        Ok(voting_id) => Ok(voting_id),
-        Err(err) => {
+            Ok(voting_id)
+        })
+        .map_err(|err| {
             let error_msg = "Could not insert voting to database".to_string();
-            eprintln!("{}. err: {:?}", error_msg, err);
-            Err(ErrorResponse {
+            println!("{}. err: {:?}", error_msg, err);
+            ErrorResponse {
                 reason: error_msg,
                 status: Status::InternalServerError,
-            })
-        }
-    }?;
+            }
+        })?;
 
     let create_voting_response = CreateVotingResponse {
         voting_id,
@@ -150,4 +140,18 @@ fn insert_poll(
             voting_fk.eq(&poll_voting_fk),
         ))
         .execute(&**conn)
+}
+
+fn check_if_voting_admin(
+    voting: Voting,
+    user: &AuthenticatedUser,
+) -> Result<Voting, ErrorResponse> {
+    if user.key_hash.to_string() == voting.admin_key_hash {
+        Ok(voting)
+    } else {
+        Err(ErrorResponse {
+            reason: format!("Admin key is not correct for voting with id: {}", voting.id),
+            status: Status::Unauthorized,
+        })
+    }
 }
