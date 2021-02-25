@@ -39,7 +39,7 @@ pub fn validate_create_voter_request(
 pub fn validate_voting_id(voting_id: &String) -> Result<(), ErrorResponse> {
     let len = voting_id.len();
     match len {
-        20 => Ok(()),
+        36 => Ok(()),
         _ => Err(ErrorResponse {
             reason: format!("Voting id must be of fixed lenght of: 36 was: {}", len),
             status: Status::BadRequest,
