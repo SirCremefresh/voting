@@ -1,4 +1,4 @@
-use super::actions::{insert_poll, insert_voting};
+use super::actions::*;
 use super::models::*;
 use super::pool::DbConn;
 
@@ -256,62 +256,6 @@ pub fn create_voting(
     };
 
     Ok(Json(create_voting_response))
-}
-
-#[inline(always)]
-fn check_if_voter(
-    conn: &DbConn,
-    voting: Voting,
-    user: &AuthenticatedUser,
-) -> Result<Voting, ErrorResponse> {
-    let voter = find_voter(conn, &user)?;
-
-    match user.key_hash.to_string().eq(&voter.voter_key_hash) {
-        true => Ok(voting),
-        false => Err(ErrorResponse {
-            reason: format!(
-                "Voter is not in voting. User has username: {}",
-                voter.username
-            ),
-            status: Status::Unauthorized,
-        }),
-    }
-}
-
-fn find_voter(conn: &DbConn, user: &AuthenticatedUser) -> Result<Voter, ErrorResponse> {
-    use super::schema::voters;
-
-    voters::table
-        .filter(voters::voter_key_hash.eq(&user.key_hash))
-        .first::<Voter>(&**conn)
-        .map_err(|err| match err {
-            diesel::NotFound => ErrorResponse {
-                reason: format!("Voter not found with key: REDACTED"),
-                status: Status::NotFound,
-            },
-            err => {
-                let error_msg = "Could not query database for voter with key: REDACTED".to_string();
-                println!("{}. err: {:?}", error_msg, err);
-                ErrorResponse {
-                    reason: error_msg,
-                    status: Status::InternalServerError,
-                }
-            }
-        })
-}
-
-#[inline(always)]
-fn check_if_voting_admin(
-    voting: Voting,
-    user: &AuthenticatedUser,
-) -> Result<Voting, ErrorResponse> {
-    match user.key_hash.to_string().eq(&voting.admin_key_hash) {
-        true => Ok(voting),
-        false => Err(ErrorResponse {
-            reason: format!("Admin key is not correct for voting with id: {}", voting.id),
-            status: Status::Unauthorized,
-        }),
-    }
 }
 
 fn find_amount_of_polls(conn: &DbConn, voting: &Voting) -> Result<i32, ErrorResponse> {

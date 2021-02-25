@@ -1,7 +1,22 @@
 use super::pool::DbConn;
+use super::models::*;
+
+use crate::dtos::{
+    CreateVoterRequest, CreateVoterResponse, CreateVotingRequest, CreateVotingResponse,
+    GetActivePollResponse, GetVoterInfoResponse, GetVotingPollsResponse, GetVotingResponse,
+    SetActivePollRequest, SetVoteRequest,
+};
+use crate::utils::{generate_uuid, hash_string, AuthenticatedUser, ErrorResponse};
+use crate::validators::{
+    validate_create_voter_request, validate_create_voting_request, validate_voting_id,
+};
 
 use diesel::insert_into;
 use diesel::prelude::*;
+use diesel::result::Error;
+use rocket::http::Status;
+use rocket::request::Request;
+use rocket_contrib::json::Json;
 
 pub fn insert_voting(
     conn: &DbConn,
@@ -36,4 +51,60 @@ pub fn insert_poll(
             voting_fk.eq(&poll_voting_fk),
         ))
         .execute(&**conn)
+}
+
+#[inline(always)]
+pub fn check_if_voting_admin(
+    voting: Voting,
+    user: &AuthenticatedUser,
+) -> Result<Voting, ErrorResponse> {
+    match user.key_hash.to_string().eq(&voting.admin_key_hash) {
+        true => Ok(voting),
+        false => Err(ErrorResponse {
+            reason: format!("Admin key is not correct for voting with id: {}", voting.id),
+            status: Status::Unauthorized,
+        }),
+    }
+}
+
+#[inline(always)]
+pub fn check_if_voter(
+    conn: &DbConn,
+    voting: Voting,
+    user: &AuthenticatedUser,
+) -> Result<Voting, ErrorResponse> {
+    let voter = find_voter(conn, &user)?;
+
+    match user.key_hash.to_string().eq(&voter.voter_key_hash) {
+        true => Ok(voting),
+        false => Err(ErrorResponse {
+            reason: format!(
+                "Voter is not in voting. User has username: {}",
+                voter.username
+            ),
+            status: Status::Unauthorized,
+        }),
+    }
+}
+
+pub fn find_voter(conn: &DbConn, user: &AuthenticatedUser) -> Result<Voter, ErrorResponse> {
+    use super::schema::voters;
+
+    voters::table
+        .filter(voters::voter_key_hash.eq(&user.key_hash))
+        .first::<Voter>(&**conn)
+        .map_err(|err| match err {
+            diesel::NotFound => ErrorResponse {
+                reason: format!("Voter not found with key: REDACTED"),
+                status: Status::NotFound,
+            },
+            err => {
+                let error_msg = "Could not query database for voter with key: REDACTED".to_string();
+                println!("{}. err: {:?}", error_msg, err);
+                ErrorResponse {
+                    reason: error_msg,
+                    status: Status::InternalServerError,
+                }
+            }
+        })
 }
