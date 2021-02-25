@@ -289,36 +289,6 @@ fn find_polls(conn: &DbConn, voting: &Voting) -> Result<Vec<Poll>, ErrorResponse
         })
 }
 
-fn find_poll_at_index(conn: &DbConn, voting: &Voting, index: i32) -> Result<Poll, ErrorResponse> {
-    use super::schema::polls::dsl::{polls, sequenz_number, voting_fk};
-
-    polls
-        .filter(voting_fk.eq(&voting.id))
-        .order(sequenz_number.asc())
-        .offset(index as i64)
-        .first::<Poll>(&**conn)
-        .map_err(|err| match err {
-            diesel::NotFound => ErrorResponse {
-                reason: format!(
-                    "Poll at index: {} for voting with id: {} not found",
-                    index, &voting.id
-                ),
-                status: Status::NotFound,
-            },
-            err => {
-                let error_msg = format!(
-                    "Could not query database for poll at index: {} for voting with id: {}",
-                    index, &voting.id
-                );
-                println!("{}. err: {:?}", error_msg, err);
-                ErrorResponse {
-                    reason: error_msg,
-                    status: Status::InternalServerError,
-                }
-            }
-        })
-}
-
 fn get_voting_polls_response_for_voting(
     conn: DbConn,
     voting: Voting,
@@ -361,27 +331,4 @@ fn insert_voter(
             }
         })?;
     Ok(())
-}
-
-fn find_voting(conn: &DbConn, voting_id: &String) -> Result<Voting, ErrorResponse> {
-    use super::schema::votings;
-
-    votings::table
-        .find(&voting_id)
-        .first::<Voting>(&**conn)
-        .map_err(|err| match err {
-            diesel::NotFound => ErrorResponse {
-                reason: format!("Voting with id: {} not found", voting_id),
-                status: Status::NotFound,
-            },
-            err => {
-                let error_msg =
-                    format!("Could not query database for voting with id: {}", voting_id);
-                println!("{}. err: {:?}", error_msg, err);
-                ErrorResponse {
-                    reason: error_msg,
-                    status: Status::InternalServerError,
-                }
-            }
-        })
 }
