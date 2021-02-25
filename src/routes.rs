@@ -258,7 +258,6 @@ pub fn create_voting(
     Ok(Json(create_voting_response))
 }
 
-
 fn get_voting_polls_response_for_voting(
     conn: DbConn,
     voting: Voting,
