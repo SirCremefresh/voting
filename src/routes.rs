@@ -299,16 +299,15 @@ fn check_if_voter(
 ) -> Result<Voting, ErrorResponse> {
     let voter = find_voter(conn, &user)?;
 
-    if user.key_hash.to_string() == voter.voter_key_hash {
-        Ok(voting)
-    } else {
-        Err(ErrorResponse {
+    match user.key_hash.to_string().eq(&voter.voter_key_hash) {
+        true => Ok(voting),
+        false => Err(ErrorResponse {
             reason: format!(
                 "Voter is not in voting. User has username: {}",
                 voter.username
             ),
             status: Status::Unauthorized,
-        })
+        }),
     }
 }
 
@@ -338,13 +337,12 @@ fn check_if_voting_admin(
     voting: Voting,
     user: &AuthenticatedUser,
 ) -> Result<Voting, ErrorResponse> {
-    if user.key_hash.to_string() == voting.admin_key_hash {
-        Ok(voting)
-    } else {
-        Err(ErrorResponse {
+    match user.key_hash.to_string().eq(&voting.admin_key_hash) {
+        true => Ok(voting),
+        false => Err(ErrorResponse {
             reason: format!("Admin key is not correct for voting with id: {}", voting.id),
             status: Status::Unauthorized,
-        })
+        }),
     }
 }
 
@@ -369,14 +367,14 @@ fn find_amount_of_polls(conn: &DbConn, voting: &Voting) -> Result<i32, ErrorResp
 fn find_polls(conn: &DbConn, voting: &Voting) -> Result<Vec<Poll>, ErrorResponse> {
     use super::schema::polls::dsl::{polls, sequenz_number, voting_fk};
 
-    return polls
+    polls
         .filter(voting_fk.eq(&voting.id))
         .order(sequenz_number.asc())
         .load::<Poll>(&**conn)
         .map_err(|_| ErrorResponse {
             reason: format!("Could not load polls to voting with id: {}", &voting.id),
             status: Status::InternalServerError,
-        });
+        })
 }
 
 fn find_poll_at_index(conn: &DbConn, voting: &Voting, index: i32) -> Result<Poll, ErrorResponse> {
