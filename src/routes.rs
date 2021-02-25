@@ -1,11 +1,10 @@
 use super::actions::*;
-use super::models::*;
 use super::pool::DbConn;
 
 use crate::dtos::{
     CreateVoterRequest, CreateVoterResponse, CreateVotingRequest, CreateVotingResponse,
-    GetActivePollResponse, GetVoterInfoResponse, GetVotingPollsResponse, GetVotingResponse,
-    SetActivePollRequest, SetVoteRequest,
+    GetActivePollResponse, GetVoterInfoResponse, GetVotingResponse, SetActivePollRequest,
+    SetVoteRequest,
 };
 use crate::utils::{generate_uuid, hash_string, AuthenticatedUser, ErrorResponse};
 use crate::validators::{
