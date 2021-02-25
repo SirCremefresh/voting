@@ -86,6 +86,22 @@ pub fn set_vote(
     let poll = find_poll_at_index(&conn, &voting, poll_index)?;
     let voter = find_voter(&conn, &user)?;
 
+    if voting.active_poll_index.is_none() {
+        return Err(ErrorResponse {
+            reason: "Can not vote because no vote is active".to_string(),
+            status: Status::BadRequest,
+        });
+    }
+    if voting.active_poll_index.unwrap() != poll_index {
+        return Err(ErrorResponse {
+            reason: format!(
+                "Can not vote because the poll_index: {} is not active",
+                poll_index
+            ),
+            status: Status::BadRequest,
+        });
+    }
+
     use super::schema::votes;
 
     insert_into(votes::table)

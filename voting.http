@@ -68,5 +68,15 @@ GET http://localhost:8000/api/votings/{{create_votings.response.body.$.votingId}
 Accept: application/json
 Authorization: {{create_voter.response.body.$.voterKey}}
 
+###
 
+# Set the active poll
+PUT http://localhost:8000/api/votings/{{create_votings.response.body.$.votingId}}/polls/0/vote
+Content-Type: application/json
+Accept: application/json
+Authorization: {{create_voter.response.body.$.voterKey}}
+
+{
+  "answer": true
+}
 
