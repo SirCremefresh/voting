@@ -50,6 +50,7 @@ fn main() {
             "/api",
             routes![
                 get_voting,
+                get_voter_info,
                 get_active_poll,
                 create_voting,
                 create_voter,

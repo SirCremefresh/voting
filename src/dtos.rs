@@ -28,6 +28,11 @@ pub struct CreateVoterRequest {
     pub username: String,
 }
 
+#[derive(Serialize, Debug)]
+pub struct GetVoterInfoResponse {
+    pub username: String,
+}
+
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct SetActivePollRequest {

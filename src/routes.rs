@@ -3,7 +3,8 @@ use super::pool::DbConn;
 
 use crate::dtos::{
     CreateVoterRequest, CreateVoterResponse, CreateVotingRequest, CreateVotingResponse,
-    GetActivePollResponse, GetVotingPollsResponse, GetVotingResponse, SetActivePollRequest,
+    GetActivePollResponse, GetVoterInfoResponse, GetVotingPollsResponse, GetVotingResponse,
+    SetActivePollRequest,
 };
 use crate::utils::{generate_uuid, hash_string, AuthenticatedUser, ErrorResponse};
 use crate::validators::{
@@ -49,14 +50,22 @@ pub fn create_voter(
     }))
 }
 
-/*
-Schnittstelle um die aktive umfrage zu setzten
-HEADER: AUTHENTICATION: string
-PUT: /api/votings/{votingId}/polls/active: {
-    pollIndex: number
-} -> {
+#[get("/votings/<voting_id>/voters/info", format = "json")]
+pub fn get_voter_info(
+    conn: DbConn,
+    voting_id: String,
+    user: AuthenticatedUser,
+) -> Result<Json<GetVoterInfoResponse>, ErrorResponse> {
+    validate_voting_id(&voting_id)?;
+
+    find_voting(&conn, &voting_id).and_then(|voting| check_if_voter(&conn, voting, &user))?;
+
+    let voter = find_voter(&conn, &user)?;
+
+    Ok(Json(GetVoterInfoResponse {
+        username: voter.username,
+    }))
 }
-*/
 
 #[put("/votings/<voting_id>/polls/active", format = "json", data = "<input>")]
 pub fn set_active_poll(
@@ -245,9 +254,25 @@ fn check_if_voter(
     voting: Voting,
     user: &AuthenticatedUser,
 ) -> Result<Voting, ErrorResponse> {
+    let voter = find_voter(conn, &user)?;
+
+    if user.key_hash.to_string() == voter.voter_key_hash {
+        Ok(voting)
+    } else {
+        Err(ErrorResponse {
+            reason: format!(
+                "Voter is not in voting. User has username: {}",
+                voter.username
+            ),
+            status: Status::Unauthorized,
+        })
+    }
+}
+
+fn find_voter(conn: &DbConn, user: &AuthenticatedUser) -> Result<Voter, ErrorResponse> {
     use super::schema::voters;
 
-    let voter = voters::table
+    voters::table
         .filter(voters::voter_key_hash.eq(&user.key_hash))
         .first::<Voter>(&**conn)
         .map_err(|err| match err {
@@ -263,19 +288,7 @@ fn check_if_voter(
                     status: Status::InternalServerError,
                 }
             }
-        })?;
-
-    if user.key_hash.to_string() == voter.voter_key_hash {
-        Ok(voting)
-    } else {
-        Err(ErrorResponse {
-            reason: format!(
-                "Voter is not in voting. User has username: {}",
-                voter.username
-            ),
-            status: Status::Unauthorized,
         })
-    }
 }
 
 fn check_if_voting_admin(

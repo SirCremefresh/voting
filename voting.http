@@ -57,7 +57,13 @@ Authorization: {{create_votings.response.body.$.adminKey}}
 
 # Get the active poll
 GET http://localhost:8000/api/votings/{{create_voter.response.body.$.votingId}}/polls/active
-Content-Type: application/json
+Accept: application/json
+Authorization: {{create_voter.response.body.$.voterKey}}
+
+###
+
+# Get info for authenticated user
+GET http://localhost:8000/api/votings/{{create_votings.response.body.$.votingId}}/voters/info
 Accept: application/json
 Authorization: {{create_voter.response.body.$.voterKey}}
 
