@@ -18,41 +18,6 @@ use rocket::http::Status;
 use rocket::request::Request;
 use rocket_contrib::json::Json;
 
-pub fn insert_voting(
-    conn: &DbConn,
-    voting_name: &String,
-    voting_admin_key_hash: &String,
-) -> QueryResult<String> {
-    use super::schema::votings::dsl::{admin_key_hash, id, name, votings};
-
-    insert_into(votings)
-        .values((
-            name.eq(&voting_name),
-            admin_key_hash.eq(&voting_admin_key_hash),
-        ))
-        .returning(id)
-        .get_result(&**conn)
-}
-
-pub fn insert_poll(
-    conn: &DbConn,
-    poll_name: &String,
-    poll_sequenz_number: i32,
-    poll_description: &String,
-    poll_voting_fk: &String,
-) -> QueryResult<usize> {
-    use super::schema::polls::dsl::{description, name, polls, sequenz_number, voting_fk};
-
-    insert_into(polls)
-        .values((
-            name.eq(&poll_name),
-            sequenz_number.eq(poll_sequenz_number),
-            description.eq(&poll_description),
-            voting_fk.eq(&poll_voting_fk),
-        ))
-        .execute(&**conn)
-}
-
 #[inline(always)]
 pub fn check_if_voting_admin(
     voting: Voting,
@@ -85,6 +50,24 @@ pub fn check_if_voter(
             status: Status::Unauthorized,
         }),
     }
+}
+
+pub fn find_amount_of_polls(conn: &DbConn, voting: &Voting) -> Result<i32, ErrorResponse> {
+    use super::schema::polls::dsl::{id, polls, voting_fk};
+    use diesel::dsl::count;
+
+    polls
+        .filter(voting_fk.eq(&voting.id))
+        .select(count(id))
+        .first::<i64>(&**conn)
+        .map_err(|_| ErrorResponse {
+            reason: format!(
+                "Could not load the amount of polls for voting with id: {}",
+                &voting.id
+            ),
+            status: Status::InternalServerError,
+        })
+        .map(|polls_count| polls_count as i32)
 }
 
 pub fn find_voter(conn: &DbConn, user: &AuthenticatedUser) -> Result<Voter, ErrorResponse> {
@@ -177,4 +160,39 @@ pub fn find_polls(conn: &DbConn, voting: &Voting) -> Result<Vec<Poll>, ErrorResp
             reason: format!("Could not load polls to voting with id: {}", &voting.id),
             status: Status::InternalServerError,
         })
+}
+
+pub fn insert_voting(
+    conn: &DbConn,
+    voting_name: &String,
+    voting_admin_key_hash: &String,
+) -> QueryResult<String> {
+    use super::schema::votings::dsl::{admin_key_hash, id, name, votings};
+
+    insert_into(votings)
+        .values((
+            name.eq(&voting_name),
+            admin_key_hash.eq(&voting_admin_key_hash),
+        ))
+        .returning(id)
+        .get_result(&**conn)
+}
+
+pub fn insert_poll(
+    conn: &DbConn,
+    poll_name: &String,
+    poll_sequenz_number: i32,
+    poll_description: &String,
+    poll_voting_fk: &String,
+) -> QueryResult<usize> {
+    use super::schema::polls::dsl::{description, name, polls, sequenz_number, voting_fk};
+
+    insert_into(polls)
+        .values((
+            name.eq(&poll_name),
+            sequenz_number.eq(poll_sequenz_number),
+            description.eq(&poll_description),
+            voting_fk.eq(&poll_voting_fk),
+        ))
+        .execute(&**conn)
 }
