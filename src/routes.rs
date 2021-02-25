@@ -188,7 +188,7 @@ pub fn get_active_poll(
         None => return Ok(Json(None)),
     };
 
-    let polls = find_polls(&conn, &voting)?;
+    let polls = find_polls(&conn, &voting.id)?;
     if active_poll_index < 0 || active_poll_index >= polls.len() as i32 {
         println!(
             "Could not load poll for voting with id: {} and active_poll_index: {}",
@@ -220,12 +220,19 @@ pub fn get_voting(
 
     find_voting(&conn, &voting_id)
         .and_then(|voting| check_if_voting_admin(voting, &user))
-        .and_then(|voting| get_voting_polls_response_for_voting(conn, voting))
-        .map(|(voting, polls_response)| {
+        .and_then(|voting| {
+            Ok((
+                voting,
+                get_voting_polls_response(&conn, &voting_id)?,
+                find_amount_of_voters(&conn, &voting_id)?,
+            ))
+        })
+        .map(|(voting, polls_response, voter_count)| {
             Json(GetVotingResponse {
                 voting_id: voting.id,
                 name: voting.name,
                 polls: polls_response,
+                voter_count
             })
         })
 }
@@ -378,15 +385,33 @@ fn find_amount_of_polls(conn: &DbConn, voting: &Voting) -> Result<i32, ErrorResp
         .map(|polls_count| polls_count as i32)
 }
 
-fn find_polls(conn: &DbConn, voting: &Voting) -> Result<Vec<Poll>, ErrorResponse> {
+fn find_amount_of_voters(conn: &DbConn, voting_id: &String) -> Result<i32, ErrorResponse> {
+    use super::schema::voters;
+    use diesel::dsl::count;
+
+    voters::table
+        .filter(voters::voting_fk.eq(&voting_id))
+        .select(count(voters::id))
+        .first::<i64>(&**conn)
+        .map_err(|_| ErrorResponse {
+            reason: format!(
+                "Could not load the amount of polls for voting with id: {}",
+                &voting_id
+            ),
+            status: Status::InternalServerError,
+        })
+        .map(|voters_count| voters_count as i32)
+}
+
+fn find_polls(conn: &DbConn, voting_id: &String) -> Result<Vec<Poll>, ErrorResponse> {
     use super::schema::polls::dsl::{polls, sequenz_number, voting_fk};
 
     polls
-        .filter(voting_fk.eq(&voting.id))
+        .filter(voting_fk.eq(&voting_id))
         .order(sequenz_number.asc())
         .load::<Poll>(&**conn)
         .map_err(|_| ErrorResponse {
-            reason: format!("Could not load polls to voting with id: {}", &voting.id),
+            reason: format!("Could not load polls to voting with id: {}", &voting_id),
             status: Status::InternalServerError,
         })
 }
@@ -421,11 +446,11 @@ fn find_poll_at_index(conn: &DbConn, voting: &Voting, index: i32) -> Result<Poll
         })
 }
 
-fn get_voting_polls_response_for_voting(
-    conn: DbConn,
-    voting: Voting,
-) -> Result<(Voting, Vec<GetVotingPollsResponse>), ErrorResponse> {
-    let loaded_polls = find_polls(&conn, &voting).map(|loaded_polls| {
+fn get_voting_polls_response(
+    conn: &DbConn,
+    voting_id: &String,
+) -> Result<Vec<GetVotingPollsResponse>, ErrorResponse> {
+    find_polls(&conn, &voting_id).map(|loaded_polls| {
         loaded_polls
             .iter()
             .map(|poll| GetVotingPollsResponse {
@@ -434,9 +459,7 @@ fn get_voting_polls_response_for_voting(
                 description: String::from(&*poll.description),
             })
             .collect::<Vec<GetVotingPollsResponse>>()
-    })?;
-
-    Ok((voting, loaded_polls))
+    })
 }
 
 fn insert_voter(
