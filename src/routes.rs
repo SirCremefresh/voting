@@ -265,12 +265,10 @@ pub fn create_voting(
             }
         })?;
 
-    let create_voting_response = CreateVotingResponse {
+    Ok(Json(CreateVotingResponse {
         voting_id,
         admin_key,
-    };
-
-    Ok(Json(create_voting_response))
+    }))
 }
 
 fn insert_voting(
