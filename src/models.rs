@@ -1,13 +1,14 @@
 use crate::schema::polls;
-use crate::schema::votings;
 use crate::schema::voters;
 use crate::schema::votes;
+use crate::schema::votings;
 
 #[derive(Queryable, Serialize, Insertable, PartialEq, Identifiable, Debug)]
 pub struct Voting {
     pub id: String,
     pub admin_key_hash: String,
     pub name: String,
+    pub active_poll_index: Option<i32>,
 }
 
 #[derive(Queryable, Serialize, Insertable, PartialEq, Identifiable, Debug)]
@@ -22,7 +23,7 @@ pub struct Poll {
 #[derive(Queryable, Serialize, Insertable, PartialEq, Identifiable, Debug)]
 pub struct Voter {
     pub id: String,
-    pub user_key_hash: String,
+    pub voter_key_hash: String,
     pub voting_fk: String,
     pub username: String,
 }

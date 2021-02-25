@@ -46,7 +46,7 @@ fn main() {
     .expect("Could run migrations");
     rocket::ignite()
         .manage(postgre_connection_poll)
-        .mount("/api", routes![get_voting, create_voting,])
+        .mount("/api", routes![get_voting, create_voting, create_voter])
         .register(catchers![unauthorized])
         .launch();
 }

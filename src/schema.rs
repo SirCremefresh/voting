@@ -11,7 +11,7 @@ table! {
 table! {
     voters (id) {
         id -> Varchar,
-        user_key_hash -> Varchar,
+        voter_key_hash -> Varchar,
         voting_fk -> Varchar,
         username -> Varchar,
     }
@@ -31,6 +31,7 @@ table! {
         id -> Varchar,
         admin_key_hash -> Varchar,
         name -> Varchar,
+        active_poll_index -> Nullable<Int4>,
     }
 }
 
@@ -39,9 +40,4 @@ joinable!(voters -> votings (voting_fk));
 joinable!(votes -> polls (poll_fk));
 joinable!(votes -> voters (voter_fk));
 
-allow_tables_to_appear_in_same_query!(
-    polls,
-    voters,
-    votes,
-    votings,
-);
+allow_tables_to_appear_in_same_query!(polls, voters, votes, votings,);

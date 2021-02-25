@@ -2,7 +2,8 @@ use super::models::*;
 use super::pool::DbConn;
 
 use crate::dtos::{
-    CreateVotingRequest, CreateVotingResponse, GetVotingPollsResponse, GetVotingResponse,
+    CreateVoterRequest, CreateVoterResponse, CreateVotingRequest, CreateVotingResponse,
+    GetVotingPollsResponse, GetVotingResponse,
 };
 use crate::utils::{generate_uuid, hash_string, AuthenticatedUser, ErrorResponse};
 use crate::validators::validate_create_voting_request;
@@ -22,6 +23,80 @@ pub fn unauthorized(_req: &Request) -> ErrorResponse {
     }
 }
 
+#[post("/voting/<voting_id>/voter", format = "json", data = "<input>")]
+pub fn create_voter(
+    conn: DbConn,
+    voting_id: String,
+    input: Json<CreateVoterRequest>,
+    user: AuthenticatedUser,
+) -> Result<Json<CreateVoterResponse>, ErrorResponse> {
+    use super::schema::voters;
+    use super::schema::votings;
+
+    let voter_key = generate_uuid();
+    let voter_key_hash = hash_string(&voter_key);
+
+    let voting = votings::table
+        .find(&voting_id)
+        .first::<Voting>(&*conn)
+        .map_err(|err| match err {
+            diesel::NotFound => ErrorResponse {
+                reason: format!("Voting with id: {} not found", voting_id),
+                status: Status::NotFound,
+            },
+            err => {
+                let error_msg =
+                    format!("Could not query database for voting with id: {}", voting_id);
+                println!("{}. err: {:?}", error_msg, err);
+                ErrorResponse {
+                    reason: error_msg,
+                    status: Status::InternalServerError,
+                }
+            }
+        })
+        .and_then(|voting| check_if_voting_admin(voting, &user))?;
+
+    insert_into(voters::table)
+        .values((
+            voters::username.eq(&input.username),
+            voters::voter_key_hash.eq(&voter_key_hash),
+            voters::voting_fk.eq(&voting.id),
+        ))
+        .execute(&*conn)
+        .map_err(|_| ErrorResponse {
+            reason: format!("Could not create voter for voting with id: {}.", &voting.id),
+            status: Status::InternalServerError,
+        })?;
+
+    Ok(Json(CreateVoterResponse {
+        voter_key,
+        voting_id: voting.id,
+    }))
+}
+
+fn find_voting(conn: &DbConn, voting_id: &String) -> Result<Voting, ErrorResponse> {
+    use super::schema::votings;
+
+    votings::table
+        .find(&voting_id)
+        .first::<Voting>(&**conn)
+        .map_err(|err| match err {
+            diesel::NotFound => ErrorResponse {
+                reason: format!("Voting with id: {} not found", voting_id),
+                status: Status::NotFound,
+            },
+            err => {
+                let error_msg =
+                    format!("Could not query database for voting with id: {}", voting_id);
+                println!("{}. err: {:?}", error_msg, err);
+                ErrorResponse {
+                    reason: error_msg,
+                    status: Status::InternalServerError,
+                }
+            }
+        })
+}
+
 #[get("/voting/<voting_id>", format = "json")]
 pub fn get_voting(
     conn: DbConn,
@@ -38,11 +113,12 @@ pub fn get_voting(
             status: Status::NotFound,
         })
         .and_then(|voting| check_if_voting_admin(voting, &user))
-        .map(|voting| {
+        .and_then(|voting| get_voting_polls_response_for_voting(conn, voting))
+        .map(|(voting, polls_response)| {
             Json(GetVotingResponse {
                 voting_id: voting.id,
                 name: voting.name,
-                polls: get_voting_polls_response(conn, &voting_id),
+                polls: polls_response,
             })
         })
 }
@@ -88,23 +164,6 @@ pub fn create_voting(
     };
 
     Ok(Json(create_voting_response))
-}
-
-fn get_voting_polls_response(conn: DbConn, voting_id: &String) -> Vec<GetVotingPollsResponse> {
-    use super::schema::polls::dsl::{polls, sequenz_number, voting_fk};
-
-    polls
-        .filter(voting_fk.eq(&voting_id))
-        .order(sequenz_number.asc())
-        .load::<Poll>(&*conn)
-        .unwrap()
-        .iter()
-        .map(|poll| GetVotingPollsResponse {
-            poll_id: String::from(&*poll.id),
-            name: String::from(&*poll.name),
-            description: String::from(&*poll.description),
-        })
-        .collect::<Vec<GetVotingPollsResponse>>()
 }
 
 fn insert_voting(
@@ -154,4 +213,32 @@ fn check_if_voting_admin(
             status: Status::Unauthorized,
         })
     }
+}
+
+fn get_voting_polls_response_for_voting(
+    conn: DbConn,
+    voting: Voting,
+) -> Result<(Voting, Vec<GetVotingPollsResponse>), ErrorResponse> {
+    use super::schema::polls::dsl::{polls, sequenz_number, voting_fk};
+
+    let loaded_polls = polls
+        .filter(voting_fk.eq(&voting.id))
+        .order(sequenz_number.asc())
+        .load::<Poll>(&*conn)
+        .map_err(|_| ErrorResponse {
+            reason: format!("Could not load polls to voting with id: {}", &voting.id),
+            status: Status::InternalServerError,
+        })
+        .map(|loaded_polls| {
+            loaded_polls
+                .iter()
+                .map(|poll| GetVotingPollsResponse {
+                    poll_id: String::from(&*poll.id),
+                    name: String::from(&*poll.name),
+                    description: String::from(&*poll.description),
+                })
+                .collect::<Vec<GetVotingPollsResponse>>()
+        })?;
+
+    Ok((voting, loaded_polls))
 }

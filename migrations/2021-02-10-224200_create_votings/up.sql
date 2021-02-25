@@ -7,7 +7,8 @@ CREATE TABLE votings
 (
     id      VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),
     admin_key_hash VARCHAR(64) NOT NULL,
-    name           VARCHAR(64) NOT NULL
+    name           VARCHAR(64) NOT NULL,
+    active_poll_index INT DEFAULT NULL
 );
 
 CREATE TABLE polls
@@ -25,7 +26,7 @@ CREATE TABLE polls
 CREATE TABLE voters 
 (
     id      VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_key_hash VARCHAR(64) NOT NULL,
+    voter_key_hash VARCHAR(64) NOT NULL,
     voting_fk   VARCHAR(36) NOT NULL
         CONSTRAINT voters_votings_id_fk
             REFERENCES votings(id)
