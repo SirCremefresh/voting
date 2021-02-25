@@ -324,14 +324,14 @@ fn find_amount_of_polls(conn: &DbConn, voting: &Voting) -> Result<i32, ErrorResp
 fn find_polls(conn: &DbConn, voting: &Voting) -> Result<Vec<Poll>, ErrorResponse> {
     use super::schema::polls::dsl::{polls, sequenz_number, voting_fk};
 
-    return polls
+    polls
         .filter(voting_fk.eq(&voting.id))
         .order(sequenz_number.asc())
         .load::<Poll>(&**conn)
         .map_err(|_| ErrorResponse {
             reason: format!("Could not load polls to voting with id: {}", &voting.id),
             status: Status::InternalServerError,
-        });
+        })
 }
 
 fn get_voting_polls_response_for_voting(
