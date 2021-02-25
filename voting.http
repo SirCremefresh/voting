@@ -29,6 +29,19 @@ Authorization: {{create_votings.response.body.$.adminKey}}
 
 ###
 
+# Set the active poll
+PUT http://localhost:8000/api/votings/{{create_votings.response.body.$.votingId}}/polls/active
+Content-Type: application/json
+Accept: application/json
+Authorization: {{create_votings.response.body.$.adminKey}}
+
+{
+  "pollIndex": 1
+}
+
+
+###
+
 # Create a voter
 # @name create_voter
 POST http://localhost:8000/api/votings/{{create_votings.response.body.$.votingId}}/voters
@@ -42,20 +55,7 @@ Authorization: {{create_votings.response.body.$.adminKey}}
 
 ###
 
-# Create a voter
-PUT http://localhost:8000/api/votings/{{create_votings.response.body.$.votingId}}/polls/active
-Content-Type: application/json
-Accept: application/json
-Authorization: {{create_votings.response.body.$.adminKey}}
-
-{
-  "pollIndex": 1
-}
-
-
-###
-
-# Get The created voting
+# Get the active poll
 GET http://localhost:8000/api/votings/{{create_voter.response.body.$.votingId}}/polls/active
 Content-Type: application/json
 Accept: application/json
