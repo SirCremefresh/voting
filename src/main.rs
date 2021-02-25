@@ -54,7 +54,7 @@ fn main() {
                 get_active_poll,
                 get_voter_info,
                 get_voting,
-                set_active_poll
+                set_active_poll,
                 set_vote
             ],
         )
