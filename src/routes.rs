@@ -31,29 +31,11 @@ pub fn create_voter(
     user: AuthenticatedUser,
 ) -> Result<Json<CreateVoterResponse>, ErrorResponse> {
     use super::schema::voters;
-    use super::schema::votings;
 
     let voter_key = generate_uuid();
     let voter_key_hash = hash_string(&voter_key);
 
-    let voting = votings::table
-        .find(&voting_id)
-        .first::<Voting>(&*conn)
-        .map_err(|err| match err {
-            diesel::NotFound => ErrorResponse {
-                reason: format!("Voting with id: {} not found", voting_id),
-                status: Status::NotFound,
-            },
-            err => {
-                let error_msg =
-                    format!("Could not query database for voting with id: {}", voting_id);
-                println!("{}. err: {:?}", error_msg, err);
-                ErrorResponse {
-                    reason: error_msg,
-                    status: Status::InternalServerError,
-                }
-            }
-        })
+    let voting = find_voting(&conn, &voting_id)
         .and_then(|voting| check_if_voting_admin(voting, &user))?;
 
     insert_into(voters::table)
