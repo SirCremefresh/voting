@@ -18,6 +18,7 @@ extern crate serde_derive;
 extern crate r2d2;
 extern crate r2d2_diesel;
 
+mod actions;
 mod dtos;
 mod models;
 mod pool;
