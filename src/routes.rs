@@ -232,7 +232,7 @@ pub fn get_voting(
                 voting_id: voting.id,
                 name: voting.name,
                 polls: polls_response,
-                voter_count
+                voter_count,
             })
         })
 }
