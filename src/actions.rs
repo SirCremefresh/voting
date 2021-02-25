@@ -162,7 +162,7 @@ pub fn find_polls(conn: &DbConn, voting: &Voting) -> Result<Vec<Poll>, ErrorResp
         })
 }
 
-fn get_voting_polls_response_for_voting(
+pub fn get_voting_polls_response_for_voting(
     conn: DbConn,
     voting: Voting,
 ) -> Result<(Voting, Vec<GetVotingPollsResponse>), ErrorResponse> {
@@ -180,7 +180,7 @@ fn get_voting_polls_response_for_voting(
     Ok((voting, loaded_polls))
 }
 
-fn insert_voter(
+pub fn insert_voter(
     conn: &DbConn,
     username: &String,
     voter_key_hash: &String,
