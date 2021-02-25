@@ -52,15 +52,7 @@ pub fn get_voting(
     voting_id: String,
     user: AuthenticatedUser,
 ) -> Result<Json<GetVotingResponse>, ErrorResponse> {
-    use super::schema::votings::dsl::votings;
-
-    votings
-        .find(&voting_id)
-        .first::<Voting>(&*conn)
-        .map_err(|_| ErrorResponse {
-            reason: format!("Voting with id: {} not found.", voting_id),
-            status: Status::NotFound,
-        })
+    find_voting(&conn, &voting_id)
         .and_then(|voting| check_if_voting_admin(voting, &user))
         .and_then(|voting| get_voting_polls_response_for_voting(conn, voting))
         .map(|(voting, polls_response)| {
