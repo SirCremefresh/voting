@@ -256,16 +256,15 @@ fn check_if_voter(
 ) -> Result<Voting, ErrorResponse> {
     let voter = find_voter(conn, &user)?;
 
-    if user.key_hash.to_string() == voter.voter_key_hash {
-        Ok(voting)
-    } else {
-        Err(ErrorResponse {
+    match user.key_hash.to_string().eq(voter.voter_key_hash) {
+        true => Ok(voting),
+        false => Err(ErrorResponse {
             reason: format!(
                 "Voter is not in voting. User has username: {}",
                 voter.username
             ),
             status: Status::Unauthorized,
-        })
+        }),
     }
 }
 
