@@ -14,6 +14,14 @@ pub struct GetVotingPollsResponse {
     pub description: String,
 }
 
+#[derive(Serialize, Debug)]
+pub struct GetActivePollResponse {
+    #[serde(rename = "pollIndex")]
+    pub poll_index: i32,
+    pub name: String,
+    pub description: String,
+}
+
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct CreateVoterRequest {

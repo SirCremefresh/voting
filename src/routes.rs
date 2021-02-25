@@ -3,7 +3,7 @@ use super::pool::DbConn;
 
 use crate::dtos::{
     CreateVoterRequest, CreateVoterResponse, CreateVotingRequest, CreateVotingResponse,
-    GetVotingPollsResponse, GetVotingResponse,
+    GetActivePollResponse, GetVotingPollsResponse, GetVotingResponse,
 };
 use crate::utils::{generate_uuid, hash_string, AuthenticatedUser, ErrorResponse};
 use crate::validators::{
@@ -25,7 +25,7 @@ pub fn unauthorized(_req: &Request) -> ErrorResponse {
     }
 }
 
-#[post("/votings/<voting_id>/voter", format = "json", data = "<input>")]
+#[post("/votings/<voting_id>/voters", format = "json", data = "<input>")]
 pub fn create_voter(
     conn: DbConn,
     voting_id: String,
@@ -47,6 +47,17 @@ pub fn create_voter(
         voter_key,
         voting_id: voting.id,
     }))
+}
+
+#[get("/votings/<voting_id>/polls/active", format = "json")]
+pub fn get_active_poll(
+    conn: DbConn,
+    voting_id: String,
+    user: AuthenticatedUser,
+) -> Result<Json<Option<GetActivePollResponse>>, ErrorResponse> {
+    validate_voting_id(&voting_id)?;
+
+   Ok(Json(None))
 }
 
 #[get("/votings/<voting_id>", format = "json")]
@@ -145,6 +156,17 @@ fn insert_poll(
             voting_fk.eq(&poll_voting_fk),
         ))
         .execute(&**conn)
+}
+
+fn check_if_voter(voting: Voting, user: &AuthenticatedUser) -> Result<Voting, ErrorResponse> {
+    if user.key_hash.to_string() == voting.admin_key_hash {
+        Ok(voting)
+    } else {
+        Err(ErrorResponse {
+            reason: format!("Admin key is not correct for voting with id: {}", voting.id),
+            status: Status::Unauthorized,
+        })
+    }
 }
 
 fn check_if_voting_admin(
