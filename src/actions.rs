@@ -19,20 +19,6 @@ use rocket::request::Request;
 use rocket_contrib::json::Json;
 
 #[inline(always)]
-pub fn check_if_voting_admin(
-    voting: Voting,
-    user: &AuthenticatedUser,
-) -> Result<Voting, ErrorResponse> {
-    match user.key_hash.to_string().eq(&voting.admin_key_hash) {
-        true => Ok(voting),
-        false => Err(ErrorResponse {
-            reason: format!("Admin key is not correct for voting with id: {}", voting.id),
-            status: Status::Unauthorized,
-        }),
-    }
-}
-
-#[inline(always)]
 pub fn check_if_voter(
     conn: &DbConn,
     voting: Voting,
@@ -47,6 +33,20 @@ pub fn check_if_voter(
                 "Voter is not in voting. User has username: {}",
                 voter.username
             ),
+            status: Status::Unauthorized,
+        }),
+    }
+}
+
+#[inline(always)]
+pub fn check_if_voting_admin(
+    voting: Voting,
+    user: &AuthenticatedUser,
+) -> Result<Voting, ErrorResponse> {
+    match user.key_hash.to_string().eq(&voting.admin_key_hash) {
+        true => Ok(voting),
+        false => Err(ErrorResponse {
+            reason: format!("Admin key is not correct for voting with id: {}", voting.id),
             status: Status::Unauthorized,
         }),
     }
@@ -126,6 +126,19 @@ pub fn find_poll_at_index(
         })
 }
 
+pub fn find_polls(conn: &DbConn, voting: &Voting) -> Result<Vec<Poll>, ErrorResponse> {
+    use super::schema::polls::dsl::{polls, sequenz_number, voting_fk};
+
+    polls
+        .filter(voting_fk.eq(&voting.id))
+        .order(sequenz_number.asc())
+        .load::<Poll>(&**conn)
+        .map_err(|_| ErrorResponse {
+            reason: format!("Could not load polls to voting with id: {}", &voting.id),
+            status: Status::InternalServerError,
+        })
+}
+
 pub fn find_voting(conn: &DbConn, voting_id: &String) -> Result<Voting, ErrorResponse> {
     use super::schema::votings;
 
@@ -149,19 +162,6 @@ pub fn find_voting(conn: &DbConn, voting_id: &String) -> Result<Voting, ErrorRes
         })
 }
 
-pub fn find_polls(conn: &DbConn, voting: &Voting) -> Result<Vec<Poll>, ErrorResponse> {
-    use super::schema::polls::dsl::{polls, sequenz_number, voting_fk};
-
-    polls
-        .filter(voting_fk.eq(&voting.id))
-        .order(sequenz_number.asc())
-        .load::<Poll>(&**conn)
-        .map_err(|_| ErrorResponse {
-            reason: format!("Could not load polls to voting with id: {}", &voting.id),
-            status: Status::InternalServerError,
-        })
-}
-
 pub fn get_voting_polls_response_for_voting(
     conn: DbConn,
     voting: Voting,
@@ -178,6 +178,25 @@ pub fn get_voting_polls_response_for_voting(
     })?;
 
     Ok((voting, loaded_polls))
+}
+
+pub fn insert_poll(
+    conn: &DbConn,
+    poll_name: &String,
+    poll_sequenz_number: i32,
+    poll_description: &String,
+    poll_voting_fk: &String,
+) -> QueryResult<usize> {
+    use super::schema::polls::dsl::{description, name, polls, sequenz_number, voting_fk};
+
+    insert_into(polls)
+        .values((
+            name.eq(&poll_name),
+            sequenz_number.eq(poll_sequenz_number),
+            description.eq(&poll_description),
+            voting_fk.eq(&poll_voting_fk),
+        ))
+        .execute(&**conn)
 }
 
 pub fn insert_voter(
@@ -204,25 +223,6 @@ pub fn insert_voter(
             }
         })?;
     Ok(())
-}
-
-pub fn insert_poll(
-    conn: &DbConn,
-    poll_name: &String,
-    poll_sequenz_number: i32,
-    poll_description: &String,
-    poll_voting_fk: &String,
-) -> QueryResult<usize> {
-    use super::schema::polls::dsl::{description, name, polls, sequenz_number, voting_fk};
-
-    insert_into(polls)
-        .values((
-            name.eq(&poll_name),
-            sequenz_number.eq(poll_sequenz_number),
-            description.eq(&poll_description),
-            voting_fk.eq(&poll_voting_fk),
-        ))
-        .execute(&**conn)
 }
 
 pub fn insert_voting(
