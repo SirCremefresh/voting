@@ -6,7 +6,7 @@ use crate::dtos::{
     GetVotingPollsResponse, GetVotingResponse,
 };
 use crate::utils::{generate_uuid, hash_string, AuthenticatedUser, ErrorResponse};
-use crate::validators::validate_create_voting_request;
+use crate::validators::{validate_create_voter_request, validate_create_voting_request};
 
 use diesel::insert_into;
 use diesel::prelude::*;
@@ -30,53 +30,20 @@ pub fn create_voter(
     input: Json<CreateVoterRequest>,
     user: AuthenticatedUser,
 ) -> Result<Json<CreateVoterResponse>, ErrorResponse> {
-    use super::schema::voters;
+    validate_create_voter_request(&input)?;
 
     let voter_key = generate_uuid();
     let voter_key_hash = hash_string(&voter_key);
 
-    let voting = find_voting(&conn, &voting_id)
-        .and_then(|voting| check_if_voting_admin(voting, &user))?;
+    let voting =
+        find_voting(&conn, &voting_id).and_then(|voting| check_if_voting_admin(voting, &user))?;
 
-    insert_into(voters::table)
-        .values((
-            voters::username.eq(&input.username),
-            voters::voter_key_hash.eq(&voter_key_hash),
-            voters::voting_fk.eq(&voting.id),
-        ))
-        .execute(&*conn)
-        .map_err(|_| ErrorResponse {
-            reason: format!("Could not create voter for voting with id: {}.", &voting.id),
-            status: Status::InternalServerError,
-        })?;
+    insert_voter(&conn, &input.username, &voter_key_hash, &voting.id)?;
 
     Ok(Json(CreateVoterResponse {
         voter_key,
         voting_id: voting.id,
     }))
-}
-
-fn find_voting(conn: &DbConn, voting_id: &String) -> Result<Voting, ErrorResponse> {
-    use super::schema::votings;
-
-    votings::table
-        .find(&voting_id)
-        .first::<Voting>(&**conn)
-        .map_err(|err| match err {
-            diesel::NotFound => ErrorResponse {
-                reason: format!("Voting with id: {} not found", voting_id),
-                status: Status::NotFound,
-            },
-            err => {
-                let error_msg =
-                    format!("Could not query database for voting with id: {}", voting_id);
-                println!("{}. err: {:?}", error_msg, err);
-                ErrorResponse {
-                    reason: error_msg,
-                    status: Status::InternalServerError,
-                }
-            }
-        })
 }
 
 #[get("/voting/<voting_id>", format = "json")]
@@ -223,4 +190,53 @@ fn get_voting_polls_response_for_voting(
         })?;
 
     Ok((voting, loaded_polls))
+}
+
+fn insert_voter(
+    conn: &DbConn,
+    username: &String,
+    voter_key_hash: &String,
+    voting_id: &String,
+) -> Result<(), ErrorResponse> {
+    use super::schema::voters;
+
+    insert_into(voters::table)
+        .values((
+            voters::username.eq(&username),
+            voters::voter_key_hash.eq(&voter_key_hash),
+            voters::voting_fk.eq(&voting_id),
+        ))
+        .execute(&**conn)
+        .map_err(|err| {
+            let error_msg = format!("Could not insert voter for voting with id: {}", voting_id);
+            println!("{}. err: {:?}", error_msg, err);
+            ErrorResponse {
+                reason: error_msg,
+                status: Status::InternalServerError,
+            }
+        })?;
+    Ok(())
+}
+
+fn find_voting(conn: &DbConn, voting_id: &String) -> Result<Voting, ErrorResponse> {
+    use super::schema::votings;
+
+    votings::table
+        .find(&voting_id)
+        .first::<Voting>(&**conn)
+        .map_err(|err| match err {
+            diesel::NotFound => ErrorResponse {
+                reason: format!("Voting with id: {} not found", voting_id),
+                status: Status::NotFound,
+            },
+            err => {
+                let error_msg =
+                    format!("Could not query database for voting with id: {}", voting_id);
+                println!("{}. err: {:?}", error_msg, err);
+                ErrorResponse {
+                    reason: error_msg,
+                    status: Status::InternalServerError,
+                }
+            }
+        })
 }

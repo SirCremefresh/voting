@@ -1,4 +1,4 @@
-use crate::dtos::{CreateVotingPollRequest, CreateVotingRequest};
+use crate::dtos::{CreateVoterRequest, CreateVotingPollRequest, CreateVotingRequest};
 use crate::utils::ErrorResponse;
 
 use rocket::http::Status;
@@ -22,6 +22,18 @@ pub fn validate_create_voting_request(
         }),
     }?;
     validate_create_voting_polls_request(&input.polls)
+}
+
+pub fn validate_create_voter_request(
+    input: &Json<CreateVoterRequest>,
+) -> Result<(), ErrorResponse> {
+    match input.username.len() {
+        5..=60 => Ok(()),
+        _ => Err(ErrorResponse {
+            reason: "Voter username length must be between 5 and 60 characters".to_string(),
+            status: Status::BadRequest,
+        }),
+    }
 }
 
 fn validate_create_voting_polls_request(
