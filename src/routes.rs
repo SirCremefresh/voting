@@ -6,7 +6,9 @@ use crate::dtos::{
     GetVotingPollsResponse, GetVotingResponse,
 };
 use crate::utils::{generate_uuid, hash_string, AuthenticatedUser, ErrorResponse};
-use crate::validators::{validate_create_voter_request, validate_create_voting_request};
+use crate::validators::{
+    validate_create_voter_request, validate_create_voting_request, validate_voting_id,
+};
 
 use diesel::insert_into;
 use diesel::prelude::*;
@@ -30,6 +32,7 @@ pub fn create_voter(
     input: Json<CreateVoterRequest>,
     user: AuthenticatedUser,
 ) -> Result<Json<CreateVoterResponse>, ErrorResponse> {
+    validate_voting_id(&voting_id)?;
     validate_create_voter_request(&input)?;
 
     let voter_key = generate_uuid();
@@ -52,6 +55,8 @@ pub fn get_voting(
     voting_id: String,
     user: AuthenticatedUser,
 ) -> Result<Json<GetVotingResponse>, ErrorResponse> {
+    validate_voting_id(&voting_id)?;
+
     find_voting(&conn, &voting_id)
         .and_then(|voting| check_if_voting_admin(voting, &user))
         .and_then(|voting| get_voting_polls_response_for_voting(conn, voting))

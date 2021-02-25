@@ -36,6 +36,17 @@ pub fn validate_create_voter_request(
     }
 }
 
+pub fn validate_voting_id(voting_id: &String) -> Result<(), ErrorResponse> {
+    let len = voting_id.len();
+    match len {
+        20 => Ok(()),
+        _ => Err(ErrorResponse {
+            reason: format!("Voting id must be of fixed lenght of: 36 was: {}", len),
+            status: Status::BadRequest,
+        }),
+    }
+}
+
 fn validate_create_voting_polls_request(
     polls: &Vec<CreateVotingPollRequest>,
 ) -> Result<(), ErrorResponse> {
