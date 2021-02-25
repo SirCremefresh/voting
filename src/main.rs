@@ -49,12 +49,12 @@ fn main() {
         .mount(
             "/api",
             routes![
-                get_voting,
-                get_voter_info,
-                get_active_poll,
-                create_voting,
                 create_voter,
-                set_active_poll,
+                create_voting,
+                get_active_poll,
+                get_voter_info,
+                get_voting,
+                set_active_poll
                 set_vote
             ],
         )
