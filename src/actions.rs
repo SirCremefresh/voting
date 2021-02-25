@@ -1,22 +1,12 @@
 use super::models::*;
 use super::pool::DbConn;
 
-use crate::dtos::{
-    CreateVoterRequest, CreateVoterResponse, CreateVotingRequest, CreateVotingResponse,
-    GetActivePollResponse, GetVoterInfoResponse, GetVotingPollsResponse, GetVotingResponse,
-    SetActivePollRequest, SetVoteRequest,
-};
-use crate::utils::{generate_uuid, hash_string, AuthenticatedUser, ErrorResponse};
-use crate::validators::{
-    validate_create_voter_request, validate_create_voting_request, validate_voting_id,
-};
+use crate::dtos::{GetActivePollResponse, GetVotingPollsResponse};
+use crate::utils::{AuthenticatedUser, ErrorResponse};
 
 use diesel::insert_into;
 use diesel::prelude::*;
-use diesel::result::Error;
 use rocket::http::Status;
-use rocket::request::Request;
-use rocket_contrib::json::Json;
 
 #[inline(always)]
 pub fn check_if_voter(
