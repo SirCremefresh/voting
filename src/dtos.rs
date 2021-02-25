@@ -28,6 +28,13 @@ pub struct CreateVoterRequest {
     pub username: String,
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct SetActivePollRequest {
+    #[serde(rename = "pollIndex")]
+    pub poll_index: Option<u16>,
+}
+
 #[derive(Serialize, Debug)]
 pub struct CreateVoterResponse {
     #[serde(rename = "voterKey")]
