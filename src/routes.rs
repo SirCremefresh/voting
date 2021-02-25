@@ -57,7 +57,34 @@ pub fn get_active_poll(
 ) -> Result<Json<Option<GetActivePollResponse>>, ErrorResponse> {
     validate_voting_id(&voting_id)?;
 
-   Ok(Json(None))
+    let voting =
+        find_voting(&conn, &voting_id).and_then(|voting| check_if_voter(&conn, voting, &user))?;
+
+    let active_poll_index = match voting.active_poll_index {
+        Some(active_poll_index) => active_poll_index,
+        None => return Ok(Json(None)),
+    };
+
+    let pollds = find_polls(&conn, &voting)?;
+    if active_poll_index < 0 || active_poll_index >= pollds.len() as i32 {
+        println!(
+            "Could not load poll for voting with id: {} and active_poll_index: {}",
+            &voting_id,
+            pollds.len()
+        );
+        return Err(ErrorResponse {
+            reason: "Could not load the poll with the current active index".to_string(),
+            status: Status::InternalServerError,
+        });
+    }
+
+    let poll = &pollds[active_poll_index as usize];
+
+    Ok(Json(Some(GetActivePollResponse {
+        poll_index: active_poll_index,
+        name: (&poll.name).to_string(),
+        description: (&poll.description).to_string(),
+    })))
 }
 
 #[get("/votings/<voting_id>", format = "json")]
@@ -158,12 +185,39 @@ fn insert_poll(
         .execute(&**conn)
 }
 
-fn check_if_voter(voting: Voting, user: &AuthenticatedUser) -> Result<Voting, ErrorResponse> {
-    if user.key_hash.to_string() == voting.admin_key_hash {
+fn check_if_voter(
+    conn: &DbConn,
+    voting: Voting,
+    user: &AuthenticatedUser,
+) -> Result<Voting, ErrorResponse> {
+    use super::schema::voters;
+
+    let voter = voters::table
+        .filter(voters::voter_key_hash.eq(&user.key_hash))
+        .first::<Voter>(&**conn)
+        .map_err(|err| match err {
+            diesel::NotFound => ErrorResponse {
+                reason: format!("Voter not found with key: REDACTED"),
+                status: Status::NotFound,
+            },
+            err => {
+                let error_msg = "Could not query database for voter with key: REDACTED".to_string();
+                println!("{}. err: {:?}", error_msg, err);
+                ErrorResponse {
+                    reason: error_msg,
+                    status: Status::InternalServerError,
+                }
+            }
+        })?;
+
+    if user.key_hash.to_string() == voter.voter_key_hash {
         Ok(voting)
     } else {
         Err(ErrorResponse {
-            reason: format!("Admin key is not correct for voting with id: {}", voting.id),
+            reason: format!(
+                "Voter is not in voting. User has username: {}",
+                voter.username
+            ),
             status: Status::Unauthorized,
         })
     }
@@ -183,30 +237,33 @@ fn check_if_voting_admin(
     }
 }
 
+fn find_polls(conn: &DbConn, voting: &Voting) -> Result<Vec<Poll>, ErrorResponse> {
+    use super::schema::polls::dsl::{polls, sequenz_number, voting_fk};
+
+    return polls
+        .filter(voting_fk.eq(&voting.id))
+        .order(sequenz_number.asc())
+        .load::<Poll>(&**conn)
+        .map_err(|_| ErrorResponse {
+            reason: format!("Could not load polls to voting with id: {}", &voting.id),
+            status: Status::InternalServerError,
+        });
+}
+
 fn get_voting_polls_response_for_voting(
     conn: DbConn,
     voting: Voting,
 ) -> Result<(Voting, Vec<GetVotingPollsResponse>), ErrorResponse> {
-    use super::schema::polls::dsl::{polls, sequenz_number, voting_fk};
-
-    let loaded_polls = polls
-        .filter(voting_fk.eq(&voting.id))
-        .order(sequenz_number.asc())
-        .load::<Poll>(&*conn)
-        .map_err(|_| ErrorResponse {
-            reason: format!("Could not load polls to voting with id: {}", &voting.id),
-            status: Status::InternalServerError,
-        })
-        .map(|loaded_polls| {
-            loaded_polls
-                .iter()
-                .map(|poll| GetVotingPollsResponse {
-                    poll_id: String::from(&*poll.id),
-                    name: String::from(&*poll.name),
-                    description: String::from(&*poll.description),
-                })
-                .collect::<Vec<GetVotingPollsResponse>>()
-        })?;
+    let loaded_polls = find_polls(&conn, &voting).map(|loaded_polls| {
+        loaded_polls
+            .iter()
+            .map(|poll| GetVotingPollsResponse {
+                poll_id: String::from(&*poll.id),
+                name: String::from(&*poll.name),
+                description: String::from(&*poll.description),
+            })
+            .collect::<Vec<GetVotingPollsResponse>>()
+    })?;
 
     Ok((voting, loaded_polls))
 }

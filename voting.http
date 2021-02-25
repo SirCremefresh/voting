@@ -29,7 +29,8 @@ Authorization: {{create_votings.response.body.$.adminKey}}
 
 ###
 
-# Get The created voting
+# Create a voter
+# @name create_voter
 POST http://localhost:8000/api/votings/{{create_votings.response.body.$.votingId}}/voters
 Content-Type: application/json
 Accept: application/json
@@ -42,7 +43,7 @@ Authorization: {{create_votings.response.body.$.adminKey}}
 ###
 
 # Get The created voting
-GET http://localhost:8000/api/votings/{{create_votings.response.body.$.votingId}}/polls/active
+GET http://localhost:8000/api/votings/{{create_voter.response.body.$.votingId}}/polls/active
 Content-Type: application/json
 Accept: application/json
-Authorization: {{create_votings.response.body.$.adminKey}}
+Authorization: {{create_voter.response.body.$.voterKey}}
