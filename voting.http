@@ -19,6 +19,7 @@ Accept: application/json
     }
   ]
 }
+
 ###
 
 # Get The created voting

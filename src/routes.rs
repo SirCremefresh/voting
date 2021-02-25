@@ -4,7 +4,7 @@ use super::pool::DbConn;
 use crate::dtos::{
     CreateVoterRequest, CreateVoterResponse, CreateVotingRequest, CreateVotingResponse,
     GetActivePollResponse, GetVoterInfoResponse, GetVotingPollsResponse, GetVotingResponse,
-    SetActivePollRequest,
+    SetActivePollRequest, SetVoteRequest,
 };
 use crate::utils::{generate_uuid, hash_string, AuthenticatedUser, ErrorResponse};
 use crate::validators::{
@@ -65,6 +65,49 @@ pub fn get_voter_info(
     Ok(Json(GetVoterInfoResponse {
         username: voter.username,
     }))
+}
+
+#[put(
+    "/votings/<voting_id>/polls/<poll_index>/vote",
+    format = "json",
+    data = "<input>"
+)]
+pub fn set_vote(
+    conn: DbConn,
+    voting_id: String,
+    poll_index: i32,
+    input: Json<SetVoteRequest>,
+    user: AuthenticatedUser,
+) -> Result<(), ErrorResponse> {
+    validate_voting_id(&voting_id)?;
+
+    let voting =
+        find_voting(&conn, &voting_id).and_then(|voting| check_if_voter(&conn, voting, &user))?;
+    let poll = find_poll_at_index(&conn, &voting, poll_index)?;
+    let voter = find_voter(&conn, &user)?;
+
+    use super::schema::votes;
+
+    insert_into(votes::table)
+        .values((
+            votes::poll_fk.eq(&poll.id),
+            votes::voter_fk.eq(&voter.id),
+            votes::answer.eq(input.answer),
+        ))
+        .execute(&*conn)
+        .map_err(|err| {
+            let error_msg = format!(
+                "Could not insert vote for poll id: {} and voter id: {} with answer: {:?}",
+                poll.id, voter.id, input.answer
+            );
+            println!("{}. err: {:?}", error_msg, err);
+            ErrorResponse {
+                reason: error_msg,
+                status: Status::InternalServerError,
+            }
+        })?;
+
+    Ok(())
 }
 
 #[put("/votings/<voting_id>/polls/active", format = "json", data = "<input>")]
@@ -332,6 +375,36 @@ fn find_polls(conn: &DbConn, voting: &Voting) -> Result<Vec<Poll>, ErrorResponse
             reason: format!("Could not load polls to voting with id: {}", &voting.id),
             status: Status::InternalServerError,
         })
+}
+
+fn find_poll_at_index(conn: &DbConn, voting: &Voting, index: i32) -> Result<Poll, ErrorResponse> {
+    use super::schema::polls::dsl::{polls, sequenz_number, voting_fk};
+
+    return polls
+        .filter(voting_fk.eq(&voting.id))
+        .order(sequenz_number.asc())
+        .offset(index as i64)
+        .first::<Poll>(&**conn)
+        .map_err(|err| match err {
+            diesel::NotFound => ErrorResponse {
+                reason: format!(
+                    "Poll at index: {} for voting with id: {} not found",
+                    index, &voting.id
+                ),
+                status: Status::NotFound,
+            },
+            err => {
+                let error_msg = format!(
+                    "Could not query database for poll at index: {} for voting with id: {}",
+                    index, &voting.id
+                );
+                println!("{}. err: {:?}", error_msg, err);
+                ErrorResponse {
+                    reason: error_msg,
+                    status: Status::InternalServerError,
+                }
+            }
+        });
 }
 
 fn get_voting_polls_response_for_voting(
