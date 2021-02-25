@@ -292,6 +292,7 @@ fn insert_poll(
         .execute(&**conn)
 }
 
+#[inline(always)]
 fn check_if_voter(
     conn: &DbConn,
     voting: Voting,
@@ -333,6 +334,7 @@ fn find_voter(conn: &DbConn, user: &AuthenticatedUser) -> Result<Voter, ErrorRes
         })
 }
 
+#[inline(always)]
 fn check_if_voting_admin(
     voting: Voting,
     user: &AuthenticatedUser,
