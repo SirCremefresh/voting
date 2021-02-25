@@ -25,7 +25,7 @@ pub fn unauthorized(_req: &Request) -> ErrorResponse {
     }
 }
 
-#[post("/voting/<voting_id>/voter", format = "json", data = "<input>")]
+#[post("/votings/<voting_id>/voter", format = "json", data = "<input>")]
 pub fn create_voter(
     conn: DbConn,
     voting_id: String,
@@ -49,7 +49,7 @@ pub fn create_voter(
     }))
 }
 
-#[get("/voting/<voting_id>", format = "json")]
+#[get("/votings/<voting_id>", format = "json")]
 pub fn get_voting(
     conn: DbConn,
     voting_id: String,

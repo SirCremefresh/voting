@@ -4,6 +4,7 @@
 # @name create_votings
 POST http://localhost:8000/api/votings
 Content-Type: application/json
+Accept: application/json
 
 {
   "name": "Some Body Oce told me",
@@ -21,8 +22,21 @@ Content-Type: application/json
 ###
 
 # Get The created voting
-GET http://localhost:8000/api/voting/{{create_votings.response.body.$.votingId}}
+GET http://localhost:8000/api/votings/{{create_votings.response.body.$.votingId}}
+Content-Type: application/json
 Accept: application/json
 Authorization: {{create_votings.response.body.$.adminKey}}
+
+###
+
+# Get The created voting
+POST http://localhost:8000/api/votings/{{create_votings.response.body.$.votingId}}/voter
+Content-Type: application/json
+Accept: application/json
+Authorization: {{create_votings.response.body.$.adminKey}}
+
+{
+  "username": "Donato Potato"
+}
 
 ###
