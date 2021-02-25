@@ -380,7 +380,7 @@ fn find_polls(conn: &DbConn, voting: &Voting) -> Result<Vec<Poll>, ErrorResponse
 fn find_poll_at_index(conn: &DbConn, voting: &Voting, index: i32) -> Result<Poll, ErrorResponse> {
     use super::schema::polls::dsl::{polls, sequenz_number, voting_fk};
 
-    return polls
+    polls
         .filter(voting_fk.eq(&voting.id))
         .order(sequenz_number.asc())
         .offset(index as i64)
@@ -404,7 +404,7 @@ fn find_poll_at_index(conn: &DbConn, voting: &Voting, index: i32) -> Result<Poll
                     status: Status::InternalServerError,
                 }
             }
-        });
+        })
 }
 
 fn get_voting_polls_response_for_voting(
