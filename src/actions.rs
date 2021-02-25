@@ -165,3 +165,16 @@ pub fn find_voting(conn: &DbConn, voting_id: &String) -> Result<Voting, ErrorRes
             }
         })
 }
+
+pub fn find_polls(conn: &DbConn, voting: &Voting) -> Result<Vec<Poll>, ErrorResponse> {
+    use super::schema::polls::dsl::{polls, sequenz_number, voting_fk};
+
+    polls
+        .filter(voting_fk.eq(&voting.id))
+        .order(sequenz_number.asc())
+        .load::<Poll>(&**conn)
+        .map_err(|_| ErrorResponse {
+            reason: format!("Could not load polls to voting with id: {}", &voting.id),
+            status: Status::InternalServerError,
+        })
+}

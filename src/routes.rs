@@ -258,36 +258,6 @@ pub fn create_voting(
     Ok(Json(create_voting_response))
 }
 
-fn find_amount_of_polls(conn: &DbConn, voting: &Voting) -> Result<i32, ErrorResponse> {
-    use super::schema::polls::dsl::{id, polls, voting_fk};
-    use diesel::dsl::count;
-
-    polls
-        .filter(voting_fk.eq(&voting.id))
-        .select(count(id))
-        .first::<i64>(&**conn)
-        .map_err(|_| ErrorResponse {
-            reason: format!(
-                "Could not load the amount of polls for voting with id: {}",
-                &voting.id
-            ),
-            status: Status::InternalServerError,
-        })
-        .map(|polls_count| polls_count as i32)
-}
-
-fn find_polls(conn: &DbConn, voting: &Voting) -> Result<Vec<Poll>, ErrorResponse> {
-    use super::schema::polls::dsl::{polls, sequenz_number, voting_fk};
-
-    polls
-        .filter(voting_fk.eq(&voting.id))
-        .order(sequenz_number.asc())
-        .load::<Poll>(&**conn)
-        .map_err(|_| ErrorResponse {
-            reason: format!("Could not load polls to voting with id: {}", &voting.id),
-            status: Status::InternalServerError,
-        })
-}
 
 fn get_voting_polls_response_for_voting(
     conn: DbConn,
