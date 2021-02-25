@@ -206,22 +206,6 @@ pub fn insert_voter(
     Ok(())
 }
 
-pub fn insert_voting(
-    conn: &DbConn,
-    voting_name: &String,
-    voting_admin_key_hash: &String,
-) -> QueryResult<String> {
-    use super::schema::votings::dsl::{admin_key_hash, id, name, votings};
-
-    insert_into(votings)
-        .values((
-            name.eq(&voting_name),
-            admin_key_hash.eq(&voting_admin_key_hash),
-        ))
-        .returning(id)
-        .get_result(&**conn)
-}
-
 pub fn insert_poll(
     conn: &DbConn,
     poll_name: &String,
@@ -239,4 +223,20 @@ pub fn insert_poll(
             voting_fk.eq(&poll_voting_fk),
         ))
         .execute(&**conn)
+}
+
+pub fn insert_voting(
+    conn: &DbConn,
+    voting_name: &String,
+    voting_admin_key_hash: &String,
+) -> QueryResult<String> {
+    use super::schema::votings::dsl::{admin_key_hash, id, name, votings};
+
+    insert_into(votings)
+        .values((
+            name.eq(&voting_name),
+            admin_key_hash.eq(&voting_admin_key_hash),
+        ))
+        .returning(id)
+        .get_result(&**conn)
 }

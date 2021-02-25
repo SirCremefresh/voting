@@ -51,6 +51,49 @@ pub fn create_voter(
     }))
 }
 
+#[post("/votings", format = "json", data = "<input>")]
+pub fn create_voting(
+    conn: DbConn,
+    input: Json<CreateVotingRequest>,
+) -> Result<Json<CreateVotingResponse>, ErrorResponse> {
+    validate_create_voting_request(&input)?;
+
+    let admin_key = generate_uuid();
+    let admin_key_hash = hash_string(&admin_key);
+
+    let voting_id = conn
+        .transaction::<String, Error, _>(|| {
+            let voting_id = insert_voting(&conn, &input.name, &admin_key_hash)?;
+
+            for (i, poll) in (&input.polls).iter().enumerate() {
+                insert_poll(
+                    &conn,
+                    &poll.name,
+                    (i * 10) as i32,
+                    &poll.description,
+                    &voting_id,
+                )?;
+            }
+
+            Ok(voting_id)
+        })
+        .map_err(|err| {
+            let error_msg = "Could not insert voting to database".to_string();
+            println!("{}. err: {:?}", error_msg, err);
+            ErrorResponse {
+                reason: error_msg,
+                status: Status::InternalServerError,
+            }
+        })?;
+
+    let create_voting_response = CreateVotingResponse {
+        voting_id,
+        admin_key,
+    };
+
+    Ok(Json(create_voting_response))
+}
+
 #[get("/votings/<voting_id>/voters/info", format = "json")]
 pub fn get_voter_info(
     conn: DbConn,
@@ -66,49 +109,6 @@ pub fn get_voter_info(
     Ok(Json(GetVoterInfoResponse {
         username: voter.username,
     }))
-}
-
-#[put(
-    "/votings/<voting_id>/polls/<poll_index>/vote",
-    format = "json",
-    data = "<input>"
-)]
-pub fn set_vote(
-    conn: DbConn,
-    voting_id: String,
-    poll_index: i32,
-    input: Json<SetVoteRequest>,
-    user: AuthenticatedUser,
-) -> Result<(), ErrorResponse> {
-    validate_voting_id(&voting_id)?;
-
-    let voting =
-        find_voting(&conn, &voting_id).and_then(|voting| check_if_voter(&conn, voting, &user))?;
-    let poll = find_poll_at_index(&conn, &voting, poll_index)?;
-    let voter = find_voter(&conn, &user)?;
-
-    use super::schema::votes;
-
-    insert_into(votes::table)
-        .values((
-            votes::poll_fk.eq(&poll.id),
-            votes::voter_fk.eq(&voter.id),
-            votes::answer.eq(input.answer),
-        ))
-        .execute(&*conn)
-        .map_err(|err| {
-            let error_msg = format!(
-                "Could not insert vote for poll id: {} and voter id: {} with answer: {:?}",
-                poll.id, voter.id, input.answer
-            );
-            println!("{}. err: {:?}", error_msg, err);
-            ErrorResponse {
-                reason: error_msg,
-                status: Status::InternalServerError,
-            }
-        })?;
-
-    Ok(())
 }
 
 #[put("/votings/<voting_id>/polls/active", format = "json", data = "<input>")]
@@ -215,34 +215,39 @@ pub fn get_voting(
         })
 }
 
-#[post("/votings", format = "json", data = "<input>")]
-pub fn create_voting(
+#[put(
+    "/votings/<voting_id>/polls/<poll_index>/vote",
+    format = "json",
+    data = "<input>"
+)]
+pub fn set_vote(
     conn: DbConn,
-    input: Json<CreateVotingRequest>,
-) -> Result<Json<CreateVotingResponse>, ErrorResponse> {
-    validate_create_voting_request(&input)?;
+    voting_id: String,
+    poll_index: i32,
+    input: Json<SetVoteRequest>,
+    user: AuthenticatedUser,
+) -> Result<(), ErrorResponse> {
+    validate_voting_id(&voting_id)?;
 
-    let admin_key = generate_uuid();
-    let admin_key_hash = hash_string(&admin_key);
+    let voting =
+        find_voting(&conn, &voting_id).and_then(|voting| check_if_voter(&conn, voting, &user))?;
+    let poll = find_poll_at_index(&conn, &voting, poll_index)?;
+    let voter = find_voter(&conn, &user)?;
 
-    let voting_id = conn
-        .transaction::<String, Error, _>(|| {
-            let voting_id = insert_voting(&conn, &input.name, &admin_key_hash)?;
+    use super::schema::votes;
 
-            for (i, poll) in (&input.polls).iter().enumerate() {
-                insert_poll(
-                    &conn,
-                    &poll.name,
-                    (i * 10) as i32,
-                    &poll.description,
-                    &voting_id,
-                )?;
-            }
-
-            Ok(voting_id)
-        })
+    insert_into(votes::table)
+        .values((
+            votes::poll_fk.eq(&poll.id),
+            votes::voter_fk.eq(&voter.id),
+            votes::answer.eq(input.answer),
+        ))
+        .execute(&*conn)
         .map_err(|err| {
-            let error_msg = "Could not insert voting to database".to_string();
+            let error_msg = format!(
+                "Could not insert vote for poll id: {} and voter id: {} with answer: {:?}",
+                poll.id, voter.id, input.answer
+            );
             println!("{}. err: {:?}", error_msg, err);
             ErrorResponse {
                 reason: error_msg,
@@ -250,10 +255,5 @@ pub fn create_voting(
             }
         })?;
 
-    let create_voting_response = CreateVotingResponse {
-        voting_id,
-        admin_key,
-    };
-
-    Ok(Json(create_voting_response))
+    Ok(())
 }
