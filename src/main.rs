@@ -54,7 +54,8 @@ fn main() {
                 get_active_poll,
                 create_voting,
                 create_voter,
-                set_active_poll
+                set_active_poll,
+                set_vote
             ],
         )
         .register(catchers![unauthorized])

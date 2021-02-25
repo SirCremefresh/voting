@@ -40,6 +40,12 @@ pub struct SetActivePollRequest {
     pub poll_index: Option<u16>,
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct SetVoteRequest {
+    pub answer: Option<bool>,
+}
+
 #[derive(Serialize, Debug)]
 pub struct CreateVoterResponse {
     #[serde(rename = "voterKey")]
