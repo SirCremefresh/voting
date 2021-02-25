@@ -1,7 +1,7 @@
 use super::models::*;
 use super::pool::DbConn;
 
-use crate::dtos::{GetActivePollResponse, GetVotingPollsResponse};
+use crate::dtos::GetVotingPollsResponse;
 use crate::utils::{AuthenticatedUser, ErrorResponse};
 
 use diesel::insert_into;
