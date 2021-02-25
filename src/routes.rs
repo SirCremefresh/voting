@@ -256,7 +256,7 @@ fn check_if_voter(
 ) -> Result<Voting, ErrorResponse> {
     let voter = find_voter(conn, &user)?;
 
-    match user.key_hash.to_string().eq(voter.voter_key_hash) {
+    match user.key_hash.to_string().eq(&voter.voter_key_hash) {
         true => Ok(voting),
         false => Err(ErrorResponse {
             reason: format!(
@@ -294,13 +294,12 @@ fn check_if_voting_admin(
     voting: Voting,
     user: &AuthenticatedUser,
 ) -> Result<Voting, ErrorResponse> {
-    if user.key_hash.to_string() == voting.admin_key_hash {
-        Ok(voting)
-    } else {
-        Err(ErrorResponse {
+    match user.key_hash.to_string().eq(&voting.admin_key_hash) {
+        true => Ok(voting),
+        false => Err(ErrorResponse {
             reason: format!("Admin key is not correct for voting with id: {}", voting.id),
             status: Status::Unauthorized,
-        })
+        }),
     }
 }
 
