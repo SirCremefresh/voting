@@ -2,10 +2,9 @@ use crate::pool::DbConn;
 
 use crate::actions::check::*;
 use crate::actions::find::*;
-use crate::actions::get::*;
 use crate::actions::insert::*;
 
-use crate::dtos::{CreateVotingRequest, CreateVotingResponse, GetVotingResponse};
+use crate::dtos::{CreateVotingRequest, CreateVotingResponse, GetVotingResponse, GetVotingPollsResponse};
 use crate::utils::{generate_uuid, hash_string, AuthenticatedUser, ErrorResponse};
 use crate::validators::{validate_create_voting_request, validate_voting_id};
 
@@ -80,4 +79,20 @@ pub fn get_voting(
                 voter_count,
             })
         })
+}
+
+fn get_voting_polls_response(
+    conn: &DbConn,
+    voting_id: &String,
+) -> Result<Vec<GetVotingPollsResponse>, ErrorResponse> {
+    find_polls(&conn, &voting_id).map(|loaded_polls| {
+        loaded_polls
+            .iter()
+            .map(|poll| GetVotingPollsResponse {
+                poll_id: String::from(&*poll.id),
+                name: String::from(&*poll.name),
+                description: String::from(&*poll.description),
+            })
+            .collect::<Vec<GetVotingPollsResponse>>()
+    })
 }
