@@ -109,6 +109,22 @@ pub fn find_polls(conn: &DbConn, voting_id: &String) -> Result<Vec<Poll>, ErrorR
         })
 }
 
+pub fn find_poll_results(
+    conn: &DbConn,
+    voting_id: &String,
+) -> Result<Vec<PollResult>, ErrorResponse> {
+    use crate::schema_custom::poll_results;
+
+    poll_results::table
+        .filter(poll_results::voting_fk.eq(&voting_id))
+        .order(poll_results::sequenz_number.asc())
+        .load::<PollResult>(&**conn)
+        .map_err(|_| ErrorResponse {
+            reason: format!("Could not load polls to voting with id: {}", &voting_id),
+            status: Status::InternalServerError,
+        })
+}
+
 pub fn find_voting(conn: &DbConn, voting_id: &String) -> Result<Voting, ErrorResponse> {
     use crate::schema::votings;
 

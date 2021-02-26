@@ -24,6 +24,7 @@ mod models;
 mod pool;
 mod routes;
 pub mod schema;
+pub mod schema_custom;
 mod utils;
 mod validators;
 

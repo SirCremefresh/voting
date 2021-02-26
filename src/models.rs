@@ -2,6 +2,7 @@ use crate::schema::polls;
 use crate::schema::voters;
 use crate::schema::votes;
 use crate::schema::votings;
+use crate::schema_custom::poll_results;
 
 #[derive(Queryable, Serialize, Insertable, PartialEq, Identifiable, Debug)]
 pub struct Voting {
@@ -34,4 +35,17 @@ pub struct Vote {
     pub poll_fk: String,
     pub voter_fk: String,
     pub answer: Option<bool>,
+}
+
+#[derive(Queryable, PartialEq, Identifiable, Debug)]
+pub struct PollResult {
+    pub id: String,
+    pub sequenz_number: i32,
+    pub voting_fk: String,
+    pub name: String,
+    pub description: String,
+    pub votes_accept: i64,
+    pub votes_decline: i64,
+    pub votes_abstain: i64,
+    pub votes_total: i64,
 }

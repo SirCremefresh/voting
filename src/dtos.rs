@@ -13,6 +13,14 @@ pub struct GetVotingPollsResponse {
     pub poll_id: String,
     pub name: String,
     pub description: String,
+    #[serde(rename = "votesAccept")]
+    pub votes_accept: i64,
+    #[serde(rename = "votesDecline")]
+    pub votes_decline: i64,
+    #[serde(rename = "votesAbstain")]
+    pub votes_abstain: i64,
+    #[serde(rename = "votesTotal")]
+    pub votes_total: i64,
 }
 
 #[derive(Serialize, Debug)]

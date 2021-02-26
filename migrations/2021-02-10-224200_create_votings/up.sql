@@ -50,6 +50,8 @@ CREATE TABLE votes (
 CREATE VIEW poll_results as
 (
 select p.id,
+       p.sequenz_number,
+       p.voting_fk,
        p.name,
        p.description,
        count(votes_accept.id)                                                     as votes_accept,
@@ -60,6 +62,6 @@ from polls p
          left join votes votes_accept on p.id = votes_accept.poll_fk and votes_accept.answer = True
          left join votes votes_decline on p.id = votes_decline.poll_fk and votes_decline.answer = False
          left join votes votes_abstain on p.id = votes_abstain.poll_fk and votes_abstain.answer IS NULL
-group by p.id, p.name, p.description, p.sequenz_number
+group by p.id, p.name, p.description, p.sequenz_number, p.voting_fk
 order by p.sequenz_number
     );
