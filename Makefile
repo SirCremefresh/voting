@@ -3,9 +3,10 @@ CARGO=cargo
 
 DIR_SCRIPTS=./scripts
 
-.PHONY: run
+.PHONY: all
+all: fmt test run
 
-run: fmt test
+run:
 	$(CARGO) $@
 
 build:
@@ -26,7 +27,9 @@ release:
 watch:
 	$(CARGO) $@ -x run
 
-prepare:
+prepare: db-prepare db-setup
+
+db-prepare:
 	$(DIR_SCRIPTS)/docker_compose.sh
 
 db-setup:

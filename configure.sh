@@ -12,3 +12,7 @@ cargo install diesel_cli --no-default-features --features "postgres"
 
 #install auto reload tool
 cargo install cargo-watch
+
+make -j watch
+make -j prepare
+make -j db-setup
