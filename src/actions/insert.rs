@@ -51,6 +51,36 @@ pub fn insert_voter(
     Ok(())
 }
 
+pub fn insert_vote(
+    conn: &DbConn,
+    poll_id: &String,
+    voter_id: &String,
+    answer: &Option<bool>,
+) -> Result<(), ErrorResponse> {
+    use crate::schema::votes;
+
+    insert_into(votes::table)
+        .values((
+            votes::poll_fk.eq(&poll_id),
+            votes::voter_fk.eq(&voter_id),
+            votes::answer.eq(answer),
+        ))
+        .execute(&**conn)
+        .map_err(|err| {
+            let error_msg = format!(
+                "Could not insert vote for poll id: {} and voter id: {} with answer: {:?}",
+                poll_id, voter_id, answer
+            );
+            println!("{}. err: {:?}", error_msg, err);
+            ErrorResponse {
+                reason: error_msg,
+                status: Status::InternalServerError,
+            }
+        })?;
+
+    Ok(())
+}
+
 pub fn insert_voting(conn: &DbConn, name: &String, admin_key_hash: &String) -> QueryResult<String> {
     use crate::schema::votings;
 
