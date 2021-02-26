@@ -5,12 +5,12 @@ use diesel::prelude::*;
 use rocket::http::Status;
 
 pub fn find_amount_of_polls(conn: &DbConn, voting: &Voting) -> Result<i32, ErrorResponse> {
-    use crate::schema::polls::dsl::{id, polls, voting_fk};
+    use crate::schema::polls;
     use diesel::dsl::count;
 
-    polls
-        .filter(voting_fk.eq(&voting.id))
-        .select(count(id))
+    polls::table
+        .filter(polls::voting_fk.eq(&voting.id))
+        .select(count(polls::id))
         .first::<i64>(&**conn)
         .map_err(|_| ErrorResponse {
             reason: format!(
@@ -20,6 +20,24 @@ pub fn find_amount_of_polls(conn: &DbConn, voting: &Voting) -> Result<i32, Error
             status: Status::InternalServerError,
         })
         .map(|polls_count| polls_count as i32)
+}
+
+pub fn find_amount_of_voters(conn: &DbConn, voting_id: &String) -> Result<i32, ErrorResponse> {
+    use crate::schema::voters;
+    use diesel::dsl::count;
+
+    voters::table
+        .filter(voters::voting_fk.eq(&voting_id))
+        .select(count(voters::id))
+        .first::<i64>(&**conn)
+        .map_err(|_| ErrorResponse {
+            reason: format!(
+                "Could not load the amount of polls for voting with id: {}",
+                &voting_id
+            ),
+            status: Status::InternalServerError,
+        })
+        .map(|voters_count| voters_count as i32)
 }
 
 pub fn find_voter(conn: &DbConn, user: &AuthenticatedUser) -> Result<Voter, ErrorResponse> {
@@ -78,15 +96,15 @@ pub fn find_poll_at_index(
         })
 }
 
-pub fn find_polls(conn: &DbConn, voting: &Voting) -> Result<Vec<Poll>, ErrorResponse> {
-    use crate::schema::polls::dsl::{polls, sequenz_number, voting_fk};
+pub fn find_polls(conn: &DbConn, voting_id: &String) -> Result<Vec<Poll>, ErrorResponse> {
+    use crate::schema::polls;
 
-    polls
-        .filter(voting_fk.eq(&voting.id))
-        .order(sequenz_number.asc())
+    polls::table
+        .filter(polls::voting_fk.eq(&voting_id))
+        .order(polls::sequenz_number.asc())
         .load::<Poll>(&**conn)
         .map_err(|_| ErrorResponse {
-            reason: format!("Could not load polls to voting with id: {}", &voting.id),
+            reason: format!("Could not load polls to voting with id: {}", &voting_id),
             status: Status::InternalServerError,
         })
 }

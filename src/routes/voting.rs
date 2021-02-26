@@ -49,12 +49,10 @@ pub fn create_voting(
             }
         })?;
 
-    let create_voting_response = CreateVotingResponse {
+    Ok(Json(CreateVotingResponse {
         voting_id,
         admin_key,
-    };
-
-    Ok(Json(create_voting_response))
+    }))
 }
 
 #[get("/votings/<voting_id>", format = "json")]
@@ -67,12 +65,19 @@ pub fn get_voting(
 
     find_voting(&conn, &voting_id)
         .and_then(|voting| check_if_voting_admin(voting, &user))
-        .and_then(|voting| get_voting_polls_response_for_voting(conn, voting))
-        .map(|(voting, polls_response)| {
+        .and_then(|voting| {
+            Ok((
+                get_voting_polls_response(&conn, &voting.id)?,
+                find_amount_of_voters(&conn, &voting.id)?,
+                voting,
+            ))
+        })
+        .map(|(polls_response, voter_count, voting)| {
             Json(GetVotingResponse {
                 voting_id: voting.id,
                 name: voting.name,
                 polls: polls_response,
+                voter_count,
             })
         })
 }

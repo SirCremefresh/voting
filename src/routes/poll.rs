@@ -73,7 +73,7 @@ pub fn get_active_poll(
         None => return Ok(Json(None)),
     };
 
-    let polls = find_polls(&conn, &voting)?;
+    let polls = find_polls(&conn, &voting_id)?;
     if active_poll_index < 0 || active_poll_index >= polls.len() as i32 {
         println!(
             "Could not load poll for voting with id: {} and active_poll_index: {}",
