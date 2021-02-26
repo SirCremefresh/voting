@@ -4,7 +4,7 @@ use crate::utils::ErrorResponse;
 use diesel::prelude::*;
 use rocket::http::Status;
 
-pub fn update_voting(
+pub fn update_voting_active_poll_index(
     conn: &DbConn,
     voting: &Voting,
     poll_index: &Option<i32>,

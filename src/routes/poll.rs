@@ -38,7 +38,7 @@ pub fn set_active_poll(
         None => None,
     };
 
-    update_voting(&conn, &voting, &poll_index)
+    update_voting_active_poll_index(&conn, &voting, &poll_index)
 }
 
 #[get("/votings/<voting_id>/polls/active", format = "json")]
