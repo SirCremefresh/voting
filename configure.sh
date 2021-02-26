@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 #scripts docker infrastructor
 chmod +x scripts/docker_compose.sh
