@@ -18,6 +18,7 @@ extern crate serde_derive;
 extern crate r2d2;
 extern crate r2d2_diesel;
 
+mod actions;
 mod dtos;
 mod models;
 mod pool;
@@ -30,7 +31,7 @@ mod validators;
 use dotenv::dotenv;
 use std::env;
 
-use routes::*;
+use routes::{poll, vote, voter, voting};
 
 fn main() {
     dotenv().ok();
@@ -49,15 +50,15 @@ fn main() {
         .mount(
             "/api",
             routes![
-                create_voter,
-                create_voting,
-                get_active_poll,
-                get_voter_info,
-                get_voting,
-                set_active_poll,
-                set_vote
+                poll::get_active_poll,
+                poll::set_active_poll,
+                voting::create_voting,
+                voting::get_voting,
+                vote::set_vote,
+                voter::create_voter,
+                voter::get_voter_info,
             ],
         )
-        .register(catchers![unauthorized])
+        .register(catchers![routes::unauthorized])
         .launch();
 }
