@@ -1,7 +1,7 @@
 [package]
 name = "voting"
 version = "0.1.0"
-authors = ["SirCremefresh <donato.wolfisberg@gmail.com>"]
+authors = ["SirCremefresh <donato.wolfisberg@gmail.com>", "sirh3e <marvin.huber@bluewin.ch>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
