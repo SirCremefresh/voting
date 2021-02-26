@@ -2,12 +2,19 @@ use crate::pool::DbConn;
 
 use crate::actions::check::*;
 use crate::actions::find::*;
+<<<<<<< HEAD
 use crate::actions::update::*;
+=======
+>>>>>>> 5ddd46a444d5850df3078e8f6e9f699fe66b83d3
 
 use crate::dtos::{GetActivePollResponse, SetActivePollRequest};
 use crate::utils::{AuthenticatedUser, ErrorResponse};
 use crate::validators::validate_voting_id;
 
+<<<<<<< HEAD
+=======
+use diesel::prelude::*;
+>>>>>>> 5ddd46a444d5850df3078e8f6e9f699fe66b83d3
 use rocket::http::Status;
 use rocket_contrib::json::Json;
 
@@ -18,6 +25,10 @@ pub fn set_active_poll(
     input: Json<SetActivePollRequest>,
     user: AuthenticatedUser,
 ) -> Result<(), ErrorResponse> {
+<<<<<<< HEAD
+=======
+    use crate::schema::votings;
+>>>>>>> 5ddd46a444d5850df3078e8f6e9f699fe66b83d3
     validate_voting_id(&voting_id)?;
 
     let voting =
@@ -38,7 +49,26 @@ pub fn set_active_poll(
         None => None,
     };
 
+<<<<<<< HEAD
     update_voting_active_poll_index(&conn, &voting, &poll_index)
+=======
+    diesel::update(&voting)
+        .set(votings::active_poll_index.eq(poll_index))
+        .execute(&*conn)
+        .map_err(|err| {
+            let error_msg = format!(
+                "Could not set active_poll_index: {:?} for voting with id: {}",
+                poll_index, voting_id
+            );
+            println!("{}. err: {:?}", error_msg, err);
+            ErrorResponse {
+                reason: error_msg,
+                status: Status::InternalServerError,
+            }
+        })?;
+
+    Ok(())
+>>>>>>> 5ddd46a444d5850df3078e8f6e9f699fe66b83d3
 }
 
 #[get("/votings/<voting_id>/polls/active", format = "json")]

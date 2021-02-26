@@ -109,6 +109,7 @@ pub fn find_polls(conn: &DbConn, voting_id: &String) -> Result<Vec<Poll>, ErrorR
         })
 }
 
+<<<<<<< HEAD
 pub fn find_poll_results(
     conn: &DbConn,
     voting_id: &String,
@@ -125,6 +126,8 @@ pub fn find_poll_results(
         })
 }
 
+=======
+>>>>>>> 5ddd46a444d5850df3078e8f6e9f699fe66b83d3
 pub fn find_voting(conn: &DbConn, voting_id: &String) -> Result<Voting, ErrorResponse> {
     use crate::schema::votings;
 

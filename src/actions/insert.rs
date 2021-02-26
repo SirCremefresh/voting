@@ -51,6 +51,7 @@ pub fn insert_voter(
     Ok(())
 }
 
+<<<<<<< HEAD
 pub fn insert_vote(
     conn: &DbConn,
     poll_id: &String,
@@ -81,6 +82,8 @@ pub fn insert_vote(
     Ok(())
 }
 
+=======
+>>>>>>> 5ddd46a444d5850df3078e8f6e9f699fe66b83d3
 pub fn insert_voting(conn: &DbConn, name: &String, admin_key_hash: &String) -> QueryResult<String> {
     use crate::schema::votings;
 

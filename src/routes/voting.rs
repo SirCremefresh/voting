@@ -87,17 +87,24 @@ fn get_voting_polls_response(
     conn: &DbConn,
     voting_id: &String,
 ) -> Result<Vec<GetVotingPollsResponse>, ErrorResponse> {
+<<<<<<< HEAD
     find_poll_results(&conn, &voting_id).map(|loaded_polls| {
+=======
+    find_polls(&conn, &voting_id).map(|loaded_polls| {
+>>>>>>> 5ddd46a444d5850df3078e8f6e9f699fe66b83d3
         loaded_polls
             .iter()
             .map(|poll| GetVotingPollsResponse {
                 poll_id: String::from(&*poll.id),
                 name: String::from(&*poll.name),
                 description: String::from(&*poll.description),
+<<<<<<< HEAD
                 votes_accept: poll.votes_accept,
                 votes_decline: poll.votes_decline,
                 votes_abstain: poll.votes_abstain,
                 votes_total: poll.votes_total,
+=======
+>>>>>>> 5ddd46a444d5850df3078e8f6e9f699fe66b83d3
             })
             .collect::<Vec<GetVotingPollsResponse>>()
     })
