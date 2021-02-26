@@ -8,6 +8,7 @@ use crate::dtos::SetVoteRequest;
 use crate::utils::{AuthenticatedUser, ErrorResponse};
 use crate::validators::validate_voting_id;
 
+use rocket::http::Status;
 use rocket_contrib::json::Json;
 
 #[put(
@@ -26,6 +27,23 @@ pub fn set_vote(
 
     let voting =
         find_voting(&conn, &voting_id).and_then(|voting| check_if_voter(&conn, voting, &user))?;
+
+    if voting.active_poll_index.is_none() {
+        return Err(ErrorResponse {
+            reason: "Can not vote because no vote is active".to_string(),
+            status: Status::BadRequest,
+        });
+    }
+    if voting.active_poll_index.unwrap() != poll_index {
+        return Err(ErrorResponse {
+            reason: format!(
+                "Can not vote because the poll_index: {} is not active",
+                poll_index
+            ),
+            status: Status::BadRequest,
+        });
+    }
+
     let poll = find_poll_at_index(&conn, &voting, poll_index)?;
     let voter = find_voter(&conn, &user)?;
 
