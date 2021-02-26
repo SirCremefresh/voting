@@ -4,7 +4,7 @@ use crate::actions::check::*;
 use crate::actions::find::*;
 use crate::actions::update::*;
 
-use crate::dtos::{GetActivePollResponse, SetActivePollRequest};
+use crate::dtos::{get_active_poll_dto, set_active_poll_dto};
 use crate::utils::{AuthenticatedUser, ErrorResponse};
 use crate::validators::validate_voting_id;
 
@@ -15,7 +15,7 @@ use rocket_contrib::json::Json;
 pub fn set_active_poll(
     conn: DbConn,
     voting_id: String,
-    input: Json<SetActivePollRequest>,
+    input: Json<set_active_poll_dto::SetActivePollRequest>,
     user: AuthenticatedUser,
 ) -> Result<(), ErrorResponse> {
     validate_voting_id(&voting_id)?;
@@ -46,7 +46,7 @@ pub fn get_active_poll(
     conn: DbConn,
     voting_id: String,
     user: AuthenticatedUser,
-) -> Result<Json<Option<GetActivePollResponse>>, ErrorResponse> {
+) -> Result<Json<Option<get_active_poll_dto::GetActivePollResponse>>, ErrorResponse> {
     validate_voting_id(&voting_id)?;
 
     let voting =
@@ -72,7 +72,7 @@ pub fn get_active_poll(
 
     let poll = &polls[active_poll_index as usize];
 
-    Ok(Json(Some(GetActivePollResponse {
+    Ok(Json(Some(get_active_poll_dto::GetActivePollResponse {
         poll_index: active_poll_index,
         name: (&poll.name).to_string(),
         description: (&poll.description).to_string(),

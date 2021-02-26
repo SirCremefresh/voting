@@ -4,7 +4,7 @@ use crate::actions::check::*;
 use crate::actions::find::*;
 use crate::actions::insert::*;
 
-use crate::dtos::{CreateVoterRequest, CreateVoterResponse, GetVoterInfoResponse};
+use crate::dtos::{create_voter_dto, get_voter_info_dto};
 use crate::utils::{generate_uuid, hash_string, AuthenticatedUser, ErrorResponse};
 use crate::validators::{validate_create_voter_request, validate_voting_id};
 
@@ -14,9 +14,9 @@ use rocket_contrib::json::Json;
 pub fn create_voter(
     conn: DbConn,
     voting_id: String,
-    input: Json<CreateVoterRequest>,
+    input: Json<create_voter_dto::CreateVoterRequest>,
     user: AuthenticatedUser,
-) -> Result<Json<CreateVoterResponse>, ErrorResponse> {
+) -> Result<Json<create_voter_dto::CreateVoterResponse>, ErrorResponse> {
     validate_voting_id(&voting_id)?;
     validate_create_voter_request(&input)?;
 
@@ -28,7 +28,7 @@ pub fn create_voter(
 
     insert_voter(&conn, &input.username, &voter_key_hash, &voting.id)?;
 
-    Ok(Json(CreateVoterResponse {
+    Ok(Json(create_voter_dto::CreateVoterResponse {
         voter_key,
         voting_id: voting.id,
     }))
@@ -39,14 +39,14 @@ pub fn get_voter_info(
     conn: DbConn,
     voting_id: String,
     user: AuthenticatedUser,
-) -> Result<Json<GetVoterInfoResponse>, ErrorResponse> {
+) -> Result<Json<get_voter_info_dto::GetVoterInfoResponse>, ErrorResponse> {
     validate_voting_id(&voting_id)?;
 
     find_voting(&conn, &voting_id).and_then(|voting| check_if_voter(&conn, voting, &user))?;
 
     let voter = find_voter(&conn, &user)?;
 
-    Ok(Json(GetVoterInfoResponse {
+    Ok(Json(get_voter_info_dto::GetVoterInfoResponse {
         username: voter.username,
     }))
 }

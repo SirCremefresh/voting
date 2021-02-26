@@ -4,9 +4,7 @@ use crate::actions::check::*;
 use crate::actions::find::*;
 use crate::actions::insert::*;
 
-use crate::dtos::{
-    CreateVotingRequest, CreateVotingResponse, GetVotingPollsResponse, GetVotingResponse,
-};
+use crate::dtos::{create_voting_dto, get_voting_dto};
 use crate::utils::{generate_uuid, hash_string, AuthenticatedUser, ErrorResponse};
 use crate::validators::{validate_create_voting_request, validate_voting_id};
 
@@ -18,8 +16,8 @@ use rocket_contrib::json::Json;
 #[post("/votings", format = "json", data = "<input>")]
 pub fn create_voting(
     conn: DbConn,
-    input: Json<CreateVotingRequest>,
-) -> Result<Json<CreateVotingResponse>, ErrorResponse> {
+    input: Json<create_voting_dto::CreateVotingRequest>,
+) -> Result<Json<create_voting_dto::CreateVotingResponse>, ErrorResponse> {
     validate_create_voting_request(&input)?;
 
     let admin_key = generate_uuid();
@@ -50,7 +48,7 @@ pub fn create_voting(
             }
         })?;
 
-    Ok(Json(CreateVotingResponse {
+    Ok(Json(create_voting_dto::CreateVotingResponse {
         voting_id,
         admin_key,
     }))
@@ -61,7 +59,7 @@ pub fn get_voting(
     conn: DbConn,
     voting_id: String,
     user: AuthenticatedUser,
-) -> Result<Json<GetVotingResponse>, ErrorResponse> {
+) -> Result<Json<get_voting_dto::GetVotingResponse>, ErrorResponse> {
     validate_voting_id(&voting_id)?;
 
     find_voting(&conn, &voting_id)
@@ -74,7 +72,7 @@ pub fn get_voting(
             ))
         })
         .map(|(polls_response, voter_count, voting)| {
-            Json(GetVotingResponse {
+            Json(get_voting_dto::GetVotingResponse {
                 voting_id: voting.id,
                 name: voting.name,
                 polls: polls_response,
@@ -86,11 +84,11 @@ pub fn get_voting(
 fn get_voting_polls_response(
     conn: &DbConn,
     voting_id: &String,
-) -> Result<Vec<GetVotingPollsResponse>, ErrorResponse> {
+) -> Result<Vec<get_voting_dto::GetVotingPollsResponse>, ErrorResponse> {
     find_poll_results(&conn, &voting_id).map(|loaded_polls| {
         loaded_polls
             .iter()
-            .map(|poll| GetVotingPollsResponse {
+            .map(|poll| get_voting_dto::GetVotingPollsResponse {
                 poll_id: String::from(&*poll.id),
                 name: String::from(&*poll.name),
                 description: String::from(&*poll.description),
@@ -99,6 +97,6 @@ fn get_voting_polls_response(
                 votes_abstain: poll.votes_abstain,
                 votes_total: poll.votes_total,
             })
-            .collect::<Vec<GetVotingPollsResponse>>()
+            .collect::<Vec<get_voting_dto::GetVotingPollsResponse>>()
     })
 }

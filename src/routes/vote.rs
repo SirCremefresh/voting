@@ -4,7 +4,7 @@ use crate::actions::check::*;
 use crate::actions::find::*;
 use crate::actions::insert::*;
 
-use crate::dtos::SetVoteRequest;
+use crate::dtos::set_vote_dto;
 use crate::utils::{AuthenticatedUser, ErrorResponse};
 use crate::validators::validate_voting_id;
 
@@ -20,7 +20,7 @@ pub fn set_vote(
     conn: DbConn,
     voting_id: String,
     poll_index: i32,
-    input: Json<SetVoteRequest>,
+    input: Json<set_vote_dto::SetVoteRequest>,
     user: AuthenticatedUser,
 ) -> Result<(), ErrorResponse> {
     validate_voting_id(&voting_id)?;
