@@ -8,8 +8,8 @@ DIR_SCRIPTS=./scripts
 run: fmt test
 	$(CARGO) $@
 
-run-watch:
-	$(CARGO) watch -x run
+watch:
+	$(CARGO) $@ -x run
 
 build:
 	$(CARGO) $@
