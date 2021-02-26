@@ -8,9 +8,6 @@ DIR_SCRIPTS=./scripts
 run: fmt test
 	$(CARGO) $@
 
-watch:
-	$(CARGO) $@ -x run
-
 build:
 	$(CARGO) $@
 
@@ -25,6 +22,9 @@ clean:
 
 release:
 	$(CARGO) build --release
+
+watch:
+	$(CARGO) $@ -x run
 
 prepare:
 	$(DIR_SCRIPTS)/docker_compose.sh
