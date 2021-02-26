@@ -1,7 +1,5 @@
-#ToDo add disel stuff to run auto up down
-CARGO=cargo
-
-DIR_SCRIPTS=./scripts
+CARGO		:= cargo
+SCRIPT_DIR	:= ./scripts
 
 .PHONY: all
 all: fmt test run
@@ -39,7 +37,7 @@ prepare: db-prepare db-setup
 
 .PHONY: db-prepare
 db-prepare:
-	$(DIR_SCRIPTS)/docker_compose.sh
+	$(SCRIPT_DIR)/docker_compose.sh
 
 .PHONY: db-setup
 db-setup:
