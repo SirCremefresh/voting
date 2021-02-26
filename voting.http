@@ -37,7 +37,7 @@ Accept: application/json
 Authorization: {{create_votings.response.body.$.adminKey}}
 
 {
-  "pollIndex": 1
+  "pollIndex": 0
 }
 
 
@@ -77,6 +77,6 @@ Accept: application/json
 Authorization: {{create_voter.response.body.$.voterKey}}
 
 {
-  "answer": true
+  "answer": false
 }
 
