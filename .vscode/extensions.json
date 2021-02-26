@@ -1,0 +1,7 @@
+{
+    "recommendations": [
+        "rust-lang.rust",
+        "humao.rest-client",
+        "ckolkman.vscode-postgres"
+    ]
+}
