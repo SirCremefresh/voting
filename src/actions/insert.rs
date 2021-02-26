@@ -8,19 +8,19 @@ use rocket::http::Status;
 
 pub fn insert_poll(
     conn: &DbConn,
-    poll_name: &String,
-    poll_sequenz_number: i32,
-    poll_description: &String,
-    poll_voting_fk: &String,
+    name: &String,
+    sequenz_number: i32,
+    description: &String,
+    voting_fk: &String,
 ) -> QueryResult<usize> {
-    use crate::schema::polls::dsl::{description, name, polls, sequenz_number, voting_fk};
+    use crate::schema::polls;
 
-    insert_into(polls)
+    insert_into(polls::table)
         .values((
-            name.eq(&poll_name),
-            sequenz_number.eq(poll_sequenz_number),
-            description.eq(&poll_description),
-            voting_fk.eq(&poll_voting_fk),
+            polls::name.eq(&name),
+            polls::sequenz_number.eq(sequenz_number),
+            polls::description.eq(&description),
+            polls::voting_fk.eq(&voting_fk),
         ))
         .execute(&**conn)
 }
@@ -51,18 +51,14 @@ pub fn insert_voter(
     Ok(())
 }
 
-pub fn insert_voting(
-    conn: &DbConn,
-    voting_name: &String,
-    voting_admin_key_hash: &String,
-) -> QueryResult<String> {
-    use crate::schema::votings::dsl::{admin_key_hash, id, name, votings};
+pub fn insert_voting(conn: &DbConn, name: &String, admin_key_hash: &String) -> QueryResult<String> {
+    use crate::schema::votings;
 
-    insert_into(votings)
+    insert_into(votings::table)
         .values((
-            name.eq(&voting_name),
-            admin_key_hash.eq(&voting_admin_key_hash),
+            votings::name.eq(&name),
+            votings::admin_key_hash.eq(&admin_key_hash),
         ))
-        .returning(id)
+        .returning(votings::id)
         .get_result(&**conn)
 }

@@ -67,11 +67,11 @@ pub fn find_poll_at_index(
     voting: &Voting,
     index: i32,
 ) -> Result<Poll, ErrorResponse> {
-    use crate::schema::polls::dsl::{polls, sequenz_number, voting_fk};
+    use crate::schema::polls;
 
-    polls
-        .filter(voting_fk.eq(&voting.id))
-        .order(sequenz_number.asc())
+    polls::table
+        .filter(polls::voting_fk.eq(&voting.id))
+        .order(polls::sequenz_number.asc())
         .offset(index as i64)
         .first::<Poll>(&**conn)
         .map_err(|err| match err {
