@@ -28,14 +28,29 @@ pub mod schema_custom;
 mod utils;
 mod validators;
 
-//use diesel;
+use chrono::Local;
 use dotenv::dotenv;
+use env_logger::Builder;
+use log::LevelFilter;
 use std::env;
+use std::io::Write;
 
 use routes::{poll, vote, voter, voting};
 
 fn main() {
     dotenv().ok();
+    Builder::new()
+        .format(|buf, record| {
+            writeln!(
+                buf,
+                "{} [{}] - {}",
+                Local::now().format("%Y-%m-%dT%H:%M:%S"),
+                record.level(),
+                record.args()
+            )
+        })
+        .filter(None, LevelFilter::Info)
+        .init();
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let postgre_connection_poll = pool::init(&database_url);
