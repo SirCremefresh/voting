@@ -32,7 +32,7 @@
     function copyVoterUrl() {
         const app = new CopyClipBoard({
             target: document.getElementById('clipboard'),
-            props: {text:voterUrl},
+            props: {text: voterUrl},
         });
         app.$destroy();
     }
@@ -45,6 +45,7 @@
             const {votingId, voterKey} = response.data;
             voterUrl = `${location.origin}/#/voting/voter?votingId=${votingId}&voterKey=${voterKey}&username=${voterUsername}`;
             voterUsername = '';
+            loadVoting();
         } else {
             voterErrorMsg = response.data.reason;
         }
@@ -84,6 +85,24 @@
         {#if voterErrorMsg !== ''}
             <div class="error-text">{voterErrorMsg}</div>
         {/if}
+        <h3>Polls</h3>
+        <div class="polls">
+            {#each voting.polls as poll, i}
+                <div class="poll flex-row flex-align-center">
+                    <div class="flex-grow">
+                        <span class="title">{poll.name}</span>
+                        <span class="description">{poll.description}</span>
+
+                        {poll.votesAbstain}
+                        {poll.votesAccept}
+                        {poll.votesDecline}
+                        {poll.votesTotal}
+                        is active: {poll.activePollIndex === i}
+                    </div>
+                       <button class="button">activate</button>
+                </div>
+            {/each}
+        </div>
     </div>
     <div id="clipboard"></div>
 </main>
@@ -108,4 +127,27 @@
         margin-left: 20%;
         margin-right: 20%;
     }
+    .poll {
+        text-align: left;
+        background-color: #f6f6f6;
+        margin: 10px;
+        padding: 10px;
+        border-radius: 4px;
+    }
+    .poll .title {
+        display: block;
+        font-weight: bold;
+    }
+
+    .poll .description {
+        display: block;
+    }
+
+    @media (max-width: 600px) {
+        .body {
+            margin-left: 0;
+            margin-right: 0;
+        }
+    }
+
 </style>
