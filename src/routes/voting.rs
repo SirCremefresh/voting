@@ -7,6 +7,7 @@ use crate::actions::insert::*;
 use crate::dtos::{create_voting_dto, get_voting_dto};
 use crate::utils::{generate_uuid, hash_string, AuthenticatedUser, ErrorResponse};
 use crate::validators::{validate_create_voting_request, validate_voting_id};
+use crate::models::PollResult;
 
 use diesel::prelude::*;
 use diesel::result::Error;
@@ -103,6 +104,7 @@ fn get_voting_polls_response(
                 poll_id: String::from(&*poll.id),
                 name: String::from(&*poll.name),
                 description: String::from(&*poll.description),
+                status: get_status_from_poll(&poll),
                 votes_accept: poll.votes_accept,
                 votes_decline: poll.votes_decline,
                 votes_abstain: poll.votes_abstain,
@@ -110,4 +112,17 @@ fn get_voting_polls_response(
             })
             .collect::<Vec<get_voting_dto::GetVotingPollsResponse>>()
     })
+}
+
+fn get_status_from_poll(poll: &PollResult) -> String {
+    if poll.votes_total == 0 {
+        return String::from("NOT_VOTED");
+    }
+    if poll.votes_accept > poll.votes_decline {
+        return String::from("ACCEPTED");
+    }
+    if poll.votes_decline > poll.votes_accept {
+        return String::from("DECLINED");
+    }
+    String::from("DRAW")
 }

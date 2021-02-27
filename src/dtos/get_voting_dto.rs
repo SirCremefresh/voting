@@ -15,6 +15,7 @@ pub struct GetVotingPollsResponse {
     #[serde(rename = "pollId")]
     pub poll_id: String,
     pub name: String,
+    pub status: String,
     pub description: String,
     #[serde(rename = "votesAccept")]
     pub votes_accept: i64,

@@ -104,15 +104,26 @@
             {#each voting.polls as poll, i}
                 <div class="poll flex-row flex-align-center" class:active={voting.activePollIndex === i}>
                     <div class="flex-grow">
-                        <span class="title">{poll.name}</span>
+                        <h4 class="title">{poll.name}</h4>
                         <span class="description">{poll.description}</span>
-
-                        {poll.votesAbstain}
-                        {poll.votesAccept}
-                        {poll.votesDecline}
-                        {poll.votesTotal}
-                        is active: {voting.activePollIndex === i}
-                        {i}
+                        <span class="status">
+                            status:
+                            <strong>
+                            {#if poll.status === 'NOT_VOTED'}
+                                not voted
+                            {:else if poll.status === 'ACCEPTED'}
+                               accepted
+                            {:else if poll.status === 'DECLINED'}
+                                declined
+                            {:else}
+                                draw
+                            {/if}
+                            </strong>
+                        </span>
+                        accepted: <strong>{poll.votesAccept}</strong>
+                        declined: <strong>{poll.votesDecline}</strong>
+                        abstain: <strong>{poll.votesAbstain}</strong>
+                        total: <strong>{poll.votesTotal}</strong>
                     </div>
                     {#if voting.activePollIndex === i}
                         <button class="button-remove" on:click={() => setActivePoll(null)}>deactivate</button>
@@ -162,9 +173,15 @@
     .poll .title {
         display: block;
         font-weight: bold;
+        margin-top: 4px;
+        margin-bottom: 4px;
     }
 
     .poll .description {
+        display: block;
+    }
+
+    .poll .status {
         display: block;
     }
 

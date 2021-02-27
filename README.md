@@ -58,3 +58,9 @@ throws
     - 400 {
         reason: 'VOTED_ALREADY' | 'VOTE_NOT_ACTIVE'
     }
+
+  
+NOT_VOTED  
+ACCEPTED  
+DECLINED  
+DRAW  
