@@ -54,7 +54,7 @@
     }
 
     async function setActivePoll(index) {
-        const response = await postData(`http://0.0.0.0:8000/api/votings/${votingId}/polls/active`, {pollIndex: index}, adminKey)
+        const response = await postData(`http://0.0.0.0:8000/api/votinsdgs/${votingId}`, {pollIndex: index}, adminKey)
         if (response.ok) {
             loadVoting();
         } else {

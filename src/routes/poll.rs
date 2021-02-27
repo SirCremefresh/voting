@@ -13,7 +13,6 @@ use rocket_contrib::json::Json;
 
 #[options("/votings/<voting_id>/polls/active")]
 pub fn cors_active_poll(voting_id: String) -> String {
-    println!("from cors active poll");
     format!("votings/{}/polls/active", voting_id)
 }
 
@@ -23,7 +22,7 @@ pub fn set_active_poll(
     voting_id: String,
     input: Json<set_active_poll_dto::SetActivePollRequest>,
     user: AuthenticatedUser,
-) -> Result<(), ErrorResponse> {
+) -> Result<Json<()>, ErrorResponse> {
     validate_voting_id(&voting_id)?;
 
     let voting =
@@ -44,7 +43,8 @@ pub fn set_active_poll(
         None => None,
     };
 
-    update_voting_active_poll_index(&conn, &voting, &poll_index)
+    update_voting_active_poll_index(&conn, &voting, &poll_index)?;
+    Ok(Json(()))
 }
 
 #[get("/votings/<voting_id>/polls/activde", format = "json")]
