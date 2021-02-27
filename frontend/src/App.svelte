@@ -3,6 +3,7 @@
     import NotFound from './routes/NotFound.svelte';
     import VotingAdmin from './routes/VotingAdmin.svelte';
     import VotingVoter from './routes/VotingVoter.svelte';
+    import {getHashPath} from "./location";
 
 
     let page = loadPagerForRoute();
@@ -11,12 +12,7 @@
     })
 
     function loadPagerForRoute() {
-        const hash = window.location
-            .hash
-            .trim()
-            .replace(/^(#\/)/, "")
-            .replace(/\?.*/, "");
-
+        const hash = getHashPath();
 
         if (hash === '') {
             return Home;

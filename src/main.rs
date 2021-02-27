@@ -56,7 +56,7 @@ impl Fairing for CORS {
         if request.method() == Method::Options || response.content_type() == Some(ContentType::JSON) {
             response.set_header(Header::new("Access-Control-Allow-Origin", "*"));
             response.set_header(Header::new("Access-Control-Allow-Methods", "POST, GET, OPTIONS"));
-            response.set_header(Header::new("Access-Control-Allow-Headers", "Content-Type"));
+            response.set_header(Header::new("Access-Control-Allow-Headers", "Content-Type, Authorization"));
             response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
         }
 
@@ -100,6 +100,7 @@ fn main() {
                 voting::create_voting,
                 voting::cors_create_voting,
                 voting::get_voting,
+                voting::cors_get_voting,
                 vote::set_vote,
                 voter::create_voter,
                 voter::get_voter_info,

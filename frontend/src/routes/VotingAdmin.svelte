@@ -1,27 +1,41 @@
 <script lang="ts">
-    function parseQuery() {
-        const keyValueList = window.location
-            .hash
-            .trim()
-            .replace(/^.*\?/, "")
-            .split("&")
-            .map(queryVar => ({
-                key: queryVar.replace(/=.*/, ""),
-                value: queryVar.replace(/^.*=/, "")
-            }));
+    import {parseQuery} from "../location";
+    import {getData} from "../api";
+    import {onMount} from 'svelte';
 
-        const queryMap = new Map();
-        for (let {key, value} of keyValueList) {
-            queryMap.set(key, value)
-        }
-        return queryMap;
+    let voting = {
+        votingId: "",
+        name: "",
+        voterCount: 0,
+        polls: [],
+        activePollIndex: null
     }
 
-    console.log(parseQuery())
+    const parsedQuery = parseQuery();
+    const votingId = parsedQuery.get('votingId');
+    const adminKey = parsedQuery.get('adminKey');
+
+    async function loadVoting() {
+        const response = await getData(`http://0.0.0.0:8000/api/votings/${votingId}`, adminKey);
+        if (response.ok) {
+            voting = response.data;
+        } else {
+            alert('could not load data. reload page');
+        }
+    }
+
+    if (votingId === undefined || adminKey === undefined) {
+        location.hash = '#/not-found'
+    } else {
+        onMount(async () => {
+            await loadVoting();
+        });
+    }
+
 </script>
 
 <main>
-    <p>Voting admin</p>
+    <h1>Voting: {voting.name}</h1>
 </main>
 
 <style>

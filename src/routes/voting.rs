@@ -59,6 +59,11 @@ pub fn create_voting(
     }))
 }
 
+#[options("/votings/<voting_id>")]
+pub fn cors_get_voting(voting_id: String) -> String {
+    format!("/votings/{}", voting_id)
+}
+
 #[get("/votings/<voting_id>", format = "json")]
 pub fn get_voting(
     conn: DbConn,
@@ -80,6 +85,7 @@ pub fn get_voting(
             Json(get_voting_dto::GetVotingResponse {
                 voting_id: voting.id,
                 name: voting.name,
+                active_poll_index: voting.active_poll_index,
                 polls: polls_response,
                 voter_count,
             })

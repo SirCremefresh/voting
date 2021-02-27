@@ -6,6 +6,8 @@ pub struct GetVotingResponse {
     #[serde(rename = "voterCount")]
     pub voter_count: i32,
     pub polls: Vec<GetVotingPollsResponse>,
+    #[serde(rename = "activePollIndex")]
+    pub active_poll_index: Option<i32>,
 }
 
 #[derive(Serialize, Debug)]
