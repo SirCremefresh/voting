@@ -54,7 +54,7 @@
     }
 
     async function setActivePoll(index) {
-        const response = await postData(`http://0.0.0.0:8000/api/votinsdgs/${votingId}`, {pollIndex: index}, adminKey)
+        const response = await postData(`http://0.0.0.0:8000/api/votings/${votingId}/polls/active`, {pollIndex: index}, adminKey)
         if (response.ok) {
             loadVoting();
         } else {
@@ -82,7 +82,8 @@
     <div class="body">
         {#if errorMsg !== ''}
             <div class="error-text">{errorMsg}. Please reload and try again</div>
-        {/if}        <h3>Add Voter</h3>
+        {/if}
+        <h3>Add Voter</h3>
         <form on:submit|preventDefault={addVoter}>
             <div class="flex-row flex-align-center">
                 <label class="" for="username">Username: </label>
@@ -158,6 +159,13 @@
         margin-right: 20%;
     }
 
+    @media (max-width: 600px) {
+        .body {
+            margin-left: 0;
+            margin-right: 0;
+        }
+    }
+
     .poll {
         text-align: left;
         background-color: #f6f6f6;
@@ -183,13 +191,6 @@
 
     .poll .status {
         display: block;
-    }
-
-    @media (max-width: 600px) {
-        .body {
-            margin-left: 0;
-            margin-right: 0;
-        }
     }
 
 </style>

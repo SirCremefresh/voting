@@ -47,7 +47,7 @@ pub fn set_active_poll(
     Ok(Json(()))
 }
 
-#[get("/votings/<voting_id>/polls/activde", format = "json")]
+#[get("/votings/<voting_id>/polls/active", format = "json")]
 pub fn get_active_poll(
     conn: DbConn,
     voting_id: String,

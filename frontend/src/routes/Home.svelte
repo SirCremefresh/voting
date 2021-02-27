@@ -124,6 +124,13 @@
         width: calc(100% - 126px);
     }
 
+    @media (max-width: 600px) {
+        .body {
+            margin-left: 0;
+            margin-right: 0;
+        }
+    }
+
     .form-descriptor {
         display: block;
         font-weight: bold;
