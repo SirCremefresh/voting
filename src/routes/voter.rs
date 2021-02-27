@@ -52,11 +52,12 @@ pub fn get_voter_info(
 ) -> Result<Json<get_voter_info_dto::GetVoterInfoResponse>, ErrorResponse> {
     validate_voting_id(&voting_id)?;
 
-    find_voting(&conn, &voting_id).and_then(|voting| check_if_voter(&conn, voting, &user))?;
+    let voting = find_voting(&conn, &voting_id).and_then(|voting| check_if_voter(&conn, voting, &user))?;
 
     let voter = find_voter(&conn, &user)?;
 
     Ok(Json(get_voter_info_dto::GetVoterInfoResponse {
+        voting_name: voting.name,
         username: voter.username,
     }))
 }
