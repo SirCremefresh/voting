@@ -7,13 +7,6 @@
     let errorMsg = '';
     addEmptyPoll();
 
-    function handleErrors(response) {
-        if (!response.ok) {
-            throw Error(response.json());
-        }
-        return response;
-    }
-
     async function saveVoting() {
         errorMsg = '';
         try {

@@ -27,7 +27,7 @@
         if (response.ok) {
             voting = response.data;
         } else {
-            alert('could not load data. reload page');
+            errorMsg = response.data.reason;
         }
     }
 
@@ -77,10 +77,11 @@
     <div class="head">
         <h1>Voting:</h1>
         <h2>{voting.name}</h2>
+        <span>{voting.voterCount} voters</span>
     </div>
     <div class="body">
         {#if errorMsg !== ''}
-            <div class="error-text">{errorMsg}</div>
+            <div class="error-text">{errorMsg}. Please reload and try again</div>
         {/if}        <h3>Add Voter</h3>
         <form on:submit|preventDefault={addVoter}>
             <div class="flex-row flex-align-center">
@@ -101,7 +102,7 @@
         <h3>Polls</h3>
         <div class="polls">
             {#each voting.polls as poll, i}
-                <div class="poll flex-row flex-align-center">
+                <div class="poll flex-row flex-align-center" class:active={voting.activePollIndex === i}>
                     <div class="flex-grow">
                         <span class="title">{poll.name}</span>
                         <span class="description">{poll.description}</span>
@@ -152,6 +153,10 @@
         margin: 10px;
         padding: 10px;
         border-radius: 4px;
+    }
+
+    .poll.active {
+        background-color: #def3de;
     }
 
     .poll .title {
