@@ -1,7 +1,7 @@
 <script lang="ts">
     import {parseQuery} from "../location";
     import CopyClipBoard from "../CopyClipBoard.svelte";
-    import {getData, postData, putData} from "../api";
+    import {getData, postData} from "../api";
     import {onMount} from 'svelte';
 
     let voting = {
