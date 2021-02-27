@@ -103,6 +103,7 @@ fn main() {
                 voting::cors_get_voting,
                 vote::set_vote,
                 voter::create_voter,
+                voter::cors_create_voter,
                 voter::get_voter_info,
             ],
         )

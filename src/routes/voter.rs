@@ -10,6 +10,11 @@ use crate::validators::{validate_create_voter_request, validate_voting_id};
 
 use rocket_contrib::json::Json;
 
+#[options("/votings/<voting_id>/voters")]
+pub fn cors_create_voter(voting_id: String) -> String {
+    format!("/votings/{}/voters", voting_id)
+}
+
 #[post("/votings/<voting_id>/voters", format = "json", data = "<input>")]
 pub fn create_voter(
     conn: DbConn,

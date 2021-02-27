@@ -154,11 +154,5 @@
         height: 40px;
     }
 
-    .error-text {
-        background-color: #e65454;
-        border-radius: 5px;
-        padding: 5px;
-        margin: 10px 30px;
-        color: white;
-    }
+
 </style>
