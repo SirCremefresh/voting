@@ -49,6 +49,25 @@
             }
         })
     }
+
+    async function sendVote() {
+        if (currentDecision === null) {
+            return;
+        }
+        let answer = null;
+        if (currentDecision === 'ACCEPT') {
+            answer = true;
+        } else if (currentDecision === 'DECLINE') {
+            answer = false;
+        }
+        const response = await postData(`http://0.0.0.0:8000/api/votings/${votingId}/polls/${activePoll.pollIndex}/vote`, {
+            answer
+        }, voterKey);
+        if (response.ok) {
+        } else {
+            errorMsg = response.data.reason;
+        }
+    }
 </script>
 
 <main>
@@ -86,7 +105,7 @@
                     </button>
                 </div>
             </div>
-            <button class="button send-vote-button">send vote</button>
+            <button class="button send-vote-button" on:click={sendVote}>send vote</button>
         {/if}
     </div>
 </main>

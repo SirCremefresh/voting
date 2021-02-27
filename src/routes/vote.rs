@@ -27,7 +27,7 @@ pub fn set_vote(
     poll_index: i32,
     input: Json<set_vote_dto::SetVoteRequest>,
     user: AuthenticatedUser,
-) -> Result<(), ErrorResponse> {
+) -> Result<Json<()>, ErrorResponse> {
     validate_voting_id(&voting_id)?;
 
     let voting =
@@ -52,5 +52,6 @@ pub fn set_vote(
     let poll = find_poll_at_index(&conn, &voting, poll_index)?;
     let voter = find_voter(&conn, &user)?;
 
-    insert_vote(&conn, &poll.id, &voter.id, &input.answer)
+    insert_vote(&conn, &poll.id, &voter.id, &input.answer)?;
+    Ok(Json(()))
 }
