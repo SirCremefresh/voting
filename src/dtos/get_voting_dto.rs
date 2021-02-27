@@ -3,6 +3,7 @@ pub struct GetVotingResponse {
     #[serde(rename = "votingId")]
     pub voting_id: String,
     pub name: String,
+    #[serde(rename = "voterCount")]
     pub voter_count: i32,
     pub polls: Vec<GetVotingPollsResponse>,
 }
