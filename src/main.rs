@@ -37,9 +37,9 @@ use std::io::Write;
 
 use routes::{poll, vote, voter, voting};
 
-use rocket::{Request, Response};
 use rocket::fairing::{Fairing, Info, Kind};
-use rocket::http::{Header, ContentType, Method};
+use rocket::http::{ContentType, Header, Method};
+use rocket::{Request, Response};
 use std::io::Cursor;
 
 pub struct CORS();
@@ -48,16 +48,22 @@ impl Fairing for CORS {
     fn info(&self) -> Info {
         Info {
             name: "Add CORS headers to requests",
-            kind: Kind::Response
+            kind: Kind::Response,
         }
     }
 
     fn on_response(&self, request: &Request, response: &mut Response) {
-        if request.method() == Method::Options || response.content_type() == Some(ContentType::JSON) {
+        if request.method() == Method::Options || response.content_type() == Some(ContentType::JSON)
+        {
             response.set_header(Header::new("Access-Control-Allow-Origin", "*"));
-            response.set_header(Header::new("Access-Control-Allow-Methods", "POST, GET, OPTIONS"));
-            response.set_header(Header::new("Access-Control-Allow-Headers", "Content-Type, Authorization"));
-            response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
+            response.set_header(Header::new(
+                "Access-Control-Allow-Methods",
+                "GET,POST,PUT,PATCH,DELETE",
+            ));
+            response.set_header(Header::new(
+                "Access-Control-Allow-Headers",
+                "Content-Type, Authorization",
+            ));
         }
 
         if request.method() == Method::Options {
@@ -97,14 +103,17 @@ fn main() {
             routes![
                 poll::get_active_poll,
                 poll::set_active_poll,
+                poll::cors_active_poll,
                 voting::create_voting,
                 voting::cors_create_voting,
                 voting::get_voting,
                 voting::cors_get_voting,
                 vote::set_vote,
+                vote::cors_set_vote,
                 voter::create_voter,
                 voter::cors_create_voter,
                 voter::get_voter_info,
+                voter::cors_get_voter_info,
             ],
         )
         .register(catchers![routes::unauthorized])

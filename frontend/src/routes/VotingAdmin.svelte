@@ -1,7 +1,7 @@
 <script lang="ts">
     import {parseQuery} from "../location";
     import CopyClipBoard from "../CopyClipBoard.svelte";
-    import {getData, postData} from "../api";
+    import {getData, postData, putData} from "../api";
     import {onMount} from 'svelte';
 
     let voting = {
@@ -15,6 +15,8 @@
     let voterUsername = '';
     let voterErrorMsg = '';
     let voterUrl = '';
+
+    let errorMsg = '';
 
     const parsedQuery = parseQuery();
     const votingId = parsedQuery.get('votingId');
@@ -51,6 +53,15 @@
         }
     }
 
+    async function setActivePoll(index) {
+        const response = await postData(`http://0.0.0.0:8000/api/votings/${votingId}/polls/active`, {pollIndex: index}, adminKey)
+        if (response.ok) {
+            loadVoting();
+        } else {
+            errorMsg = response.data.reason;
+        }
+    }
+
     if (votingId === undefined || adminKey === undefined) {
         location.hash = '#/not-found'
     } else {
@@ -68,7 +79,9 @@
         <h2>{voting.name}</h2>
     </div>
     <div class="body">
-        <h3>Add Voter</h3>
+        {#if errorMsg !== ''}
+            <div class="error-text">{errorMsg}</div>
+        {/if}        <h3>Add Voter</h3>
         <form on:submit|preventDefault={addVoter}>
             <div class="flex-row flex-align-center">
                 <label class="" for="username">Username: </label>
@@ -97,9 +110,14 @@
                         {poll.votesAccept}
                         {poll.votesDecline}
                         {poll.votesTotal}
-                        is active: {poll.activePollIndex === i}
+                        is active: {voting.activePollIndex === i}
+                        {i}
                     </div>
-                       <button class="button">activate</button>
+                    {#if voting.activePollIndex === i}
+                        <button class="button-remove" on:click={() => setActivePoll(null)}>deactivate</button>
+                    {:else}
+                        <button class="button" on:click={() => setActivePoll(i)}>activate</button>
+                    {/if}
                 </div>
             {/each}
         </div>
@@ -127,6 +145,7 @@
         margin-left: 20%;
         margin-right: 20%;
     }
+
     .poll {
         text-align: left;
         background-color: #f6f6f6;
@@ -134,6 +153,7 @@
         padding: 10px;
         border-radius: 4px;
     }
+
     .poll .title {
         display: block;
         font-weight: bold;

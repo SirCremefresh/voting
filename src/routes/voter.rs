@@ -39,6 +39,11 @@ pub fn create_voter(
     }))
 }
 
+#[options("/votings/<voting_id>/voters/info")]
+pub fn cors_get_voter_info(voting_id: String) -> String {
+    format!("/votings/{}/voters/info", voting_id)
+}
+
 #[get("/votings/<voting_id>/voters/info", format = "json")]
 pub fn get_voter_info(
     conn: DbConn,

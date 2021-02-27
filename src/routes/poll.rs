@@ -11,7 +11,13 @@ use crate::validators::validate_voting_id;
 use rocket::http::Status;
 use rocket_contrib::json::Json;
 
-#[put("/votings/<voting_id>/polls/active", format = "json", data = "<input>")]
+#[options("/votings/<voting_id>/polls/active")]
+pub fn cors_active_poll(voting_id: String) -> String {
+    println!("from cors active poll");
+    format!("votings/{}/polls/active", voting_id)
+}
+
+#[post("/votings/<voting_id>/polls/active", format = "json", data = "<input>")]
 pub fn set_active_poll(
     conn: DbConn,
     voting_id: String,
@@ -41,7 +47,7 @@ pub fn set_active_poll(
     update_voting_active_poll_index(&conn, &voting, &poll_index)
 }
 
-#[get("/votings/<voting_id>/polls/active", format = "json")]
+#[get("/votings/<voting_id>/polls/activde", format = "json")]
 pub fn get_active_poll(
     conn: DbConn,
     voting_id: String,
