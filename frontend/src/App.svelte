@@ -14,7 +14,9 @@
         const hash = window.location
             .hash
             .trim()
-            .replace(/^(#\/)/, "");
+            .replace(/^(#\/)/, "")
+            .replace(/\?.*/, "");
+
 
         if (hash === '') {
             return Home;

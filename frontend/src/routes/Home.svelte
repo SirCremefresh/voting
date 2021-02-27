@@ -2,10 +2,46 @@
 
     let name = '';
     let polls = [];
+    let errorMsg = '';
     addEmptyPoll();
 
-    function saveVoting() {
-        console.log('saveVoting')
+    function handleErrors(response) {
+        if (!response.ok) {
+            throw Error(response.json());
+        }
+        return response;
+    }
+
+    async function postData(url = '', data = {}) {
+        return fetch(url, {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json().then(data => ({
+                ok: response.ok, data
+            })))
+    }
+
+    async function saveVoting() {
+        errorMsg = '';
+        try {
+            const response = await postData('http://0.0.0.0:8000/api/votings', {
+                name,
+                polls
+            });
+            if (response.ok) {
+                const {votingId, adminKey} = response.data;
+                location.hash = `#/voting/admin?votingId=${votingId}&adminKey=${adminKey}`
+            } else {
+                errorMsg = response.data.reason;
+            }
+        } catch (e) {
+            console.log(e)
+        }
     }
 
     function removePoll(index) {
@@ -38,7 +74,7 @@
             <span class="form-descriptor">Voting:</span>
             <label>
                 <span class="form-label">Name: </span>
-                <input type="text" name="name" value={name}>
+                <input type="text" name="name" bind:value={name}>
             </label>
             <span class="form-descriptor">
                 Polls:
@@ -68,6 +104,9 @@
                     </div>
                 {/each}
             </div>
+            {#if errorMsg !== ''}
+                <div class="error-text">{errorMsg}</div>
+            {/if}
             <button class="button-submit" type="submit">save voting</button>
         </form>
     </div>
@@ -125,5 +164,13 @@
         margin: 10px;
         width: 40px;
         height: 40px;
+    }
+
+    .error-text {
+        background-color: #e65454;
+        border-radius: 5px;
+        padding: 5px;
+        margin: 10px 30px;
+        color: white;
     }
 </style>

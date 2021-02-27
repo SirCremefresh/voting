@@ -13,6 +13,11 @@ use diesel::result::Error;
 use rocket::http::Status;
 use rocket_contrib::json::Json;
 
+#[options("/votings")]
+pub fn cors_create_voting() -> String {
+    "/votings".to_string()
+}
+
 #[post("/votings", format = "json", data = "<input>")]
 pub fn create_voting(
     conn: DbConn,
