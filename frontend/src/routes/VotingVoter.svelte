@@ -68,7 +68,7 @@
             <div class="poll">
                 <h4 class="title">{activePoll.name}</h4>
                 <span class="description">{activePoll.description}</span>
-                <div class="flex-row">
+                <div class="flex-row decision-buttons">
                     <button class="flex-grow button-submit"
                             class:active={currentDecision === 'ACCEPT'}
                             on:click={() => currentDecision = 'ACCEPT'}
@@ -141,6 +141,10 @@
 
     .poll .description {
         display: block;
+    }
+
+    .decision-buttons {
+        margin-top: 20px;
     }
 
     .send-vote-button {
