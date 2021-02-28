@@ -93,8 +93,8 @@ pub fn get_active_poll(
 
 fn get_answered_from_vote(vote: &Vote) -> String {
     match vote.answer {
-        None => "NOT_VOTED",
-        Some(true) => "ACCEPTED",
-        Some(false) => "DECLINED",
+        None => "ABSTAIN",
+        Some(true) => "ACCEPT",
+        Some(false) => "DECLINE",
     }.to_string()
 }

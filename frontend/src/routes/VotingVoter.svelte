@@ -34,7 +34,12 @@
                 const response = await getData(`http://0.0.0.0:8000/api/votings/${votingId}/polls/active`, voterKey)
                 if (response.ok) {
                     if (response.data === null || activePoll === null || response.data.pollIndex !== activePoll.pollIndex) {
-                        currentDecision = null;
+                        if (response.data !== null) {
+                            currentDecision = response.data.voted;
+                            console.log('ass' + response.data.voted)
+                        } else {
+                            currentDecision = null;
+                        }
                     }
                     activePoll = response.data;
                     console.log(activePoll)
@@ -50,20 +55,32 @@
         })
     }
 
+    function setCurrentDecision(decision) {
+        if (activePoll.voted === null) {
+            currentDecision = decision;
+        }
+    }
+
+    let answering = false;
+
     async function sendVote() {
         if (currentDecision === null) {
             return;
         }
+        answering = true;
         let answer = null;
         if (currentDecision === 'ACCEPT') {
             answer = true;
         } else if (currentDecision === 'DECLINE') {
             answer = false;
         }
+
         const response = await postData(`http://0.0.0.0:8000/api/votings/${votingId}/polls/${activePoll.pollIndex}/vote`, {
             answer
         }, voterKey);
+        answering = false
         if (response.ok) {
+            activePoll.voted = answer;
         } else {
             errorMsg = response.data.reason;
         }
@@ -90,22 +107,26 @@
                 <div class="flex-row decision-buttons">
                     <button class="flex-grow button-submit"
                             class:active={currentDecision === 'ACCEPT'}
-                            on:click={() => currentDecision = 'ACCEPT'}
+                            on:click={() => setCurrentDecision('ACCEPT')}
                     >Accept
                     </button>
                     <button class="flex-grow button-remove"
                             class:active={currentDecision === 'DECLINE'}
-                            on:click={() => currentDecision = 'DECLINE'}
+                            on:click={() => setCurrentDecision('DECLINE')}
                     >Decline
                     </button>
                     <button class="flex-grow button-abstain"
                             class:active={currentDecision === 'ABSTAIN'}
-                            on:click={() => currentDecision = 'ABSTAIN'}
+                            on:click={() => setCurrentDecision('ABSTAIN')}
                     >Abstain
                     </button>
                 </div>
             </div>
-            <button class="button send-vote-button" on:click={sendVote}>send vote</button>
+            {#if activePoll.voted === null}
+                <button class="button send-vote-button" tabindex="-1" on:click={sendVote}>send vote</button>
+            {:else}
+                <div class="info-text">Already voted</div>
+            {/if}
         {/if}
     </div>
 </main>
