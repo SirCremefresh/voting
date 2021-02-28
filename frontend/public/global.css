@@ -1,0 +1,150 @@
+html, body {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    color: #333;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+a {
+    color: rgb(0, 100, 200);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+a:visited {
+    color: rgb(0, 80, 160);
+}
+
+label {
+    display: block;
+}
+
+input, button, select, textarea {
+    font-family: inherit;
+    font-size: inherit;
+    -webkit-padding: 0.4em 0;
+    padding: 0.4em;
+    margin: 0 0 0.5em 0;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+}
+
+input:disabled {
+    color: #ccc;
+}
+
+.button {
+    outline: none;
+    display: inline-block;
+    padding: 0.3em 1.2em;
+    margin: 0 0.3em 0.3em 0;
+    border-radius: 2em;
+    box-sizing: border-box;
+    text-decoration: none;
+    color: #FFFFFF;
+    background-color: #4eb5f1;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.button:hover {
+    background-color: #4095c6;
+}
+
+.button-submit {
+    outline: none;
+    display: inline-block;
+    padding: 0.3em 1.2em;
+    margin: 0 0.3em 0.3em 0;
+    border-radius: 2em;
+    box-sizing: border-box;
+    text-decoration: none;
+    color: #FFFFFF;
+    background-color: #4ef18f;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.button-submit:hover {
+    background-color: #28d771;
+}
+
+.button-remove {
+    outline: none;
+    display: inline-block;
+    padding: 0.3em 1.2em;
+    margin: 0 0.3em 0.3em 0;
+    border-radius: 2em;
+    box-sizing: border-box;
+    text-decoration: none;
+    color: #FFFFFF;
+    background-color: #e65454;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.button-remove:hover {
+    background-color: #d41818;
+}
+
+.button-abstain {
+    outline: none;
+    display: inline-block;
+    padding: 0.3em 1.2em;
+    margin: 0 0.3em 0.3em 0;
+    border-radius: 2em;
+    box-sizing: border-box;
+    text-decoration: none;
+    color: #FFFFFF;
+    background-color: #688ca0;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.button-abstain:hover {
+    background-color: #404e55;
+}
+
+
+button:disabled {
+    color: #999;
+}
+
+.flex-row {
+    display: flex;
+    flex-direction: row;
+}
+
+.flex-grow {
+    flex-grow: 1;
+}
+
+.flex-align-center {
+    align-items: center;
+}
+
+.error-text {
+    background-color: #e65454;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 10px 30px;
+    color: white;
+}
+.info-text {
+    background-color: #ceefba;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 10px 30px;
+    color: #000000;
+}

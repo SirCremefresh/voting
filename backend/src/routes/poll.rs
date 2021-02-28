@@ -10,14 +10,20 @@ use crate::validators::validate_voting_id;
 
 use rocket::http::Status;
 use rocket_contrib::json::Json;
+use crate::models::Vote;
 
-#[put("/votings/<voting_id>/polls/active", format = "json", data = "<input>")]
+#[options("/votings/<voting_id>/polls/active")]
+pub fn cors_active_poll(voting_id: String) -> String {
+    format!("votings/{}/polls/active", voting_id)
+}
+
+#[post("/votings/<voting_id>/polls/active", format = "json", data = "<input>")]
 pub fn set_active_poll(
     conn: DbConn,
     voting_id: String,
     input: Json<set_active_poll_dto::SetActivePollRequest>,
     user: AuthenticatedUser,
-) -> Result<(), ErrorResponse> {
+) -> Result<Json<()>, ErrorResponse> {
     validate_voting_id(&voting_id)?;
 
     let voting =
@@ -38,7 +44,8 @@ pub fn set_active_poll(
         None => None,
     };
 
-    update_voting_active_poll_index(&conn, &voting, &poll_index)
+    update_voting_active_poll_index(&conn, &voting, &poll_index)?;
+    Ok(Json(()))
 }
 
 #[get("/votings/<voting_id>/polls/active", format = "json")]
@@ -72,9 +79,22 @@ pub fn get_active_poll(
 
     let poll = &polls[active_poll_index as usize];
 
+    let voter = find_voter(&conn, &user)?;
+    let voted = find_vote(&conn, &poll.id, &voter.id)?
+        .map(|vote| get_answered_from_vote(&vote));
+
     Ok(Json(Some(get_active_poll_dto::GetActivePollResponse {
         poll_index: active_poll_index,
         name: (&poll.name).to_string(),
         description: (&poll.description).to_string(),
+        voted,
     })))
+}
+
+fn get_answered_from_vote(vote: &Vote) -> String {
+    match vote.answer {
+        None => "ABSTAIN",
+        Some(true) => "ACCEPT",
+        Some(false) => "DECLINE",
+    }.to_string()
 }

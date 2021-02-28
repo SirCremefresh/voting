@@ -5,6 +5,7 @@ use crate::actions::find::*;
 use crate::actions::insert::*;
 
 use crate::dtos::{create_voting_dto, get_voting_dto};
+use crate::models::PollResult;
 use crate::utils::{generate_uuid, hash_string, AuthenticatedUser, ErrorResponse};
 use crate::validators::{validate_create_voting_request, validate_voting_id};
 
@@ -12,6 +13,11 @@ use diesel::prelude::*;
 use diesel::result::Error;
 use rocket::http::Status;
 use rocket_contrib::json::Json;
+
+#[options("/votings")]
+pub fn cors_create_voting() -> String {
+    "/votings".to_string()
+}
 
 #[post("/votings", format = "json", data = "<input>")]
 pub fn create_voting(
@@ -54,6 +60,11 @@ pub fn create_voting(
     }))
 }
 
+#[options("/votings/<voting_id>")]
+pub fn cors_get_voting(voting_id: String) -> String {
+    format!("/votings/{}", voting_id)
+}
+
 #[get("/votings/<voting_id>", format = "json")]
 pub fn get_voting(
     conn: DbConn,
@@ -75,6 +86,7 @@ pub fn get_voting(
             Json(get_voting_dto::GetVotingResponse {
                 voting_id: voting.id,
                 name: voting.name,
+                active_poll_index: voting.active_poll_index,
                 polls: polls_response,
                 voter_count,
             })
@@ -92,6 +104,7 @@ fn get_voting_polls_response(
                 poll_id: String::from(&*poll.id),
                 name: String::from(&*poll.name),
                 description: String::from(&*poll.description),
+                status: get_status_from_poll(&poll),
                 votes_accept: poll.votes_accept,
                 votes_decline: poll.votes_decline,
                 votes_abstain: poll.votes_abstain,
@@ -99,4 +112,17 @@ fn get_voting_polls_response(
             })
             .collect::<Vec<get_voting_dto::GetVotingPollsResponse>>()
     })
+}
+
+fn get_status_from_poll(poll: &PollResult) -> String {
+    if poll.votes_total == 0 {
+        return String::from("NOT_VOTED");
+    }
+    if poll.votes_accept > poll.votes_decline {
+        return String::from("ACCEPTED");
+    }
+    if poll.votes_decline > poll.votes_accept {
+        return String::from("DECLINED");
+    }
+    String::from("DRAW")
 }

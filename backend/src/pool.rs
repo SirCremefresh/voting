@@ -34,6 +34,12 @@ impl<'a, 'r> FromRequest<'a, 'r> for DbConn {
 }
 
 pub fn init(database_url: &str) -> Pool {
+    println!("Connect to database_url: {}", database_url);
     let manager = ConnectionManager::<DbType>::new(database_url);
-    r2d2::Pool::new(manager).expect("db pool")
+    r2d2::Pool::new(manager)
+        .map_err(|err| {
+            println!("Error creating Database Poll. err: {:?}", err);
+            err
+        })
+        .expect("db pool")
 }

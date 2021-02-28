@@ -3,8 +3,11 @@ pub struct GetVotingResponse {
     #[serde(rename = "votingId")]
     pub voting_id: String,
     pub name: String,
+    #[serde(rename = "voterCount")]
     pub voter_count: i32,
     pub polls: Vec<GetVotingPollsResponse>,
+    #[serde(rename = "activePollIndex")]
+    pub active_poll_index: Option<i32>,
 }
 
 #[derive(Serialize, Debug)]
@@ -12,6 +15,7 @@ pub struct GetVotingPollsResponse {
     #[serde(rename = "pollId")]
     pub poll_id: String,
     pub name: String,
+    pub status: String,
     pub description: String,
     #[serde(rename = "votesAccept")]
     pub votes_accept: i64,

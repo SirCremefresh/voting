@@ -11,10 +11,15 @@ use crate::validators::validate_voting_id;
 use rocket::http::Status;
 use rocket_contrib::json::Json;
 
-#[put(
-    "/votings/<voting_id>/polls/<poll_index>/vote",
-    format = "json",
-    data = "<input>"
+#[options("/votings/<voting_id>/polls/<poll_index>/vote")]
+pub fn cors_set_vote(voting_id: String, poll_index: i32) -> String {
+    format!("/votings/{}/polls/{}/vote", voting_id, poll_index)
+}
+
+#[post(
+"/votings/<voting_id>/polls/<poll_index>/vote",
+format = "json",
+data = "<input>"
 )]
 pub fn set_vote(
     conn: DbConn,
@@ -22,7 +27,7 @@ pub fn set_vote(
     poll_index: i32,
     input: Json<set_vote_dto::SetVoteRequest>,
     user: AuthenticatedUser,
-) -> Result<(), ErrorResponse> {
+) -> Result<Json<()>, ErrorResponse> {
     validate_voting_id(&voting_id)?;
 
     let voting =
@@ -47,5 +52,17 @@ pub fn set_vote(
     let poll = find_poll_at_index(&conn, &voting, poll_index)?;
     let voter = find_voter(&conn, &user)?;
 
-    insert_vote(&conn, &poll.id, &voter.id, &input.answer)
+    let voted = find_vote(&conn, &poll.id, &voter.id)?;
+    if voted.is_some() {
+        return Err(ErrorResponse {
+            reason: format!(
+                "Voter already voted on this poll with index: {}",
+                poll_index
+            ),
+            status: Status::BadRequest,
+        });
+    }
+
+    insert_vote(&conn, &poll.id, &voter.id, &input.answer)?;
+    Ok(Json(()))
 }

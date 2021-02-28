@@ -1,4 +1,10 @@
+# Build
+```
+docker build . -t gcr.io/sircremefresh/voting:v0.0.1   
+docker push gcr.io/sircremefresh/voting:v0.0.2   
+```
 
+# Api
 // TODO: implement 418 i am a tea pot
 
 type Poll = {
@@ -58,3 +64,9 @@ throws
     - 400 {
         reason: 'VOTED_ALREADY' | 'VOTE_NOT_ACTIVE'
     }
+
+  
+NOT_VOTED  
+ACCEPTED  
+DECLINED  
+DRAW  

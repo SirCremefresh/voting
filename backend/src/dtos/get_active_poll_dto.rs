@@ -4,4 +4,5 @@ pub struct GetActivePollResponse {
     pub poll_index: i32,
     pub name: String,
     pub description: String,
+    pub voted: Option<String>,
 }
