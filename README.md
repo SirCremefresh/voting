@@ -1,3 +1,6 @@
+# Voting
+A simple toll i created to learn some rust. It let's you create votings and add users where the admin is able to set the current active vote which the users will be able to vote to.
+
 # Build
 ```
 docker build . -t gcr.io/sircremefresh/voting:v0.0.1   
