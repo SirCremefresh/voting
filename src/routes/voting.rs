@@ -5,9 +5,9 @@ use crate::actions::find::*;
 use crate::actions::insert::*;
 
 use crate::dtos::{create_voting_dto, get_voting_dto};
+use crate::models::PollResult;
 use crate::utils::{generate_uuid, hash_string, AuthenticatedUser, ErrorResponse};
 use crate::validators::{validate_create_voting_request, validate_voting_id};
-use crate::models::PollResult;
 
 use diesel::prelude::*;
 use diesel::result::Error;

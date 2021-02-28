@@ -147,3 +147,21 @@ pub fn find_voting(conn: &DbConn, voting_id: &String) -> Result<Voting, ErrorRes
             }
         })
 }
+
+pub fn find_vote(conn: &DbConn, poll_id: &String, voter_id: &String) -> Result<Option<Vote>, ErrorResponse> {
+    use crate::schema::votes;
+
+    votes::table
+        .filter(votes::poll_fk.eq(&poll_id).and(votes::voter_fk.eq(&voter_id)))
+        .first::<Vote>(&**conn)
+        .optional()
+        .map_err(|err| {
+            let error_msg =
+                format!("Could not query database for vote with poll_id: {} and voter_id: {}", poll_id, voter_id);
+            println!("{}. err: {:?}", error_msg, err);
+            ErrorResponse {
+                reason: error_msg,
+                status: Status::InternalServerError,
+            }
+        })
+}

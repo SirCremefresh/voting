@@ -17,9 +17,9 @@ pub fn cors_set_vote(voting_id: String, poll_index: i32) -> String {
 }
 
 #[post(
-    "/votings/<voting_id>/polls/<poll_index>/vote",
-    format = "json",
-    data = "<input>"
+"/votings/<voting_id>/polls/<poll_index>/vote",
+format = "json",
+data = "<input>"
 )]
 pub fn set_vote(
     conn: DbConn,
@@ -51,6 +51,17 @@ pub fn set_vote(
 
     let poll = find_poll_at_index(&conn, &voting, poll_index)?;
     let voter = find_voter(&conn, &user)?;
+
+    let voted = find_vote(&conn, &poll.id, &voter.id)?;
+    if voted.is_some() {
+        return Err(ErrorResponse {
+            reason: format!(
+                "Voter already voted on this poll with index: {}",
+                poll_index
+            ),
+            status: Status::BadRequest,
+        });
+    }
 
     insert_vote(&conn, &poll.id, &voter.id, &input.answer)?;
     Ok(Json(()))
