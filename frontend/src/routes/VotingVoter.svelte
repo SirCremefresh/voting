@@ -17,7 +17,7 @@
     const voterKey = parsedQuery.get('voterKey');
 
     async function loadVoterInfo() {
-        const response = await getData(`http://0.0.0.0:8000/api/votings/${votingId}/voters/info`, voterKey);
+        const response = await getData(`${process.env.apiUrl}/votings/${votingId}/voters/info`, voterKey);
         if (response.ok) {
             voterInfo = response.data;
         } else {
@@ -31,18 +31,16 @@
         onMount(async () => {
             await loadVoterInfo();
             updateInterval = setInterval(async () => {
-                const response = await getData(`http://0.0.0.0:8000/api/votings/${votingId}/polls/active`, voterKey)
+                const response = await getData(`${process.env.apiUrl}/votings/${votingId}/polls/active`, voterKey)
                 if (response.ok) {
                     if (response.data === null || activePoll === null || response.data.pollIndex !== activePoll.pollIndex) {
                         if (response.data !== null) {
                             currentDecision = response.data.voted;
-                            console.log('ass' + response.data.voted)
                         } else {
                             currentDecision = null;
                         }
                     }
                     activePoll = response.data;
-                    console.log(activePoll)
                 } else {
                     errorMsg = response.data.reason;
                 }
@@ -75,7 +73,7 @@
             answer = false;
         }
 
-        const response = await postData(`http://0.0.0.0:8000/api/votings/${votingId}/polls/${activePoll.pollIndex}/vote`, {
+        const response = await postData(`${process.env.apiUrl}/votings/${votingId}/polls/${activePoll.pollIndex}/vote`, {
             answer
         }, voterKey);
         answering = false

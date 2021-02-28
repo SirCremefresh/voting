@@ -10,7 +10,7 @@
     async function saveVoting() {
         errorMsg = '';
         try {
-            const response = await postData('http://0.0.0.0:8000/api/votings', {
+            const response = await postData(`${process.env.apiUrl}/votings`, {
                 name,
                 polls
             });
@@ -102,7 +102,7 @@
         clip-path: polygon(
                 0 0,
                 100% 0,
-                100% 60%,
+                100% 70%,
                 0 100%
         );
         padding: 5rem 20% 7rem;

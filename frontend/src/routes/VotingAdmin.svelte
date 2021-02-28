@@ -23,7 +23,7 @@
     const adminKey = parsedQuery.get('adminKey');
 
     async function loadVoting() {
-        const response = await getData(`http://0.0.0.0:8000/api/votings/${votingId}`, adminKey);
+        const response = await getData(`${process.env.apiUrl}/votings/${votingId}`, adminKey);
         if (response.ok) {
             voting = response.data;
         } else {
@@ -42,7 +42,7 @@
     async function addVoter() {
         voterErrorMsg = '';
         voterUrl = '';
-        const response = await postData(`http://0.0.0.0:8000/api/votings/${votingId}/voters`, {username: voterUsername}, adminKey)
+        const response = await postData(`${process.env.apiUrl}/votings/${votingId}/voters`, {username: voterUsername}, adminKey)
         if (response.ok) {
             const {votingId, voterKey} = response.data;
             voterUrl = `${location.origin}/#/voting/voter?votingId=${votingId}&voterKey=${voterKey}&username=${voterUsername}`;
@@ -54,7 +54,7 @@
     }
 
     async function setActivePoll(index) {
-        const response = await postData(`http://0.0.0.0:8000/api/votings/${votingId}/polls/active`, {pollIndex: index}, adminKey)
+        const response = await postData(`${process.env.apiUrl}/votings/${votingId}/polls/active`, {pollIndex: index}, adminKey)
         if (response.ok) {
             loadVoting();
         } else {
