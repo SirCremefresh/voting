@@ -99,12 +99,12 @@ fn get_voting_polls_response(
 ) -> Result<Vec<get_voting_dto::GetVotingPollsResponse>, ErrorResponse> {
     find_poll_results(&conn, &voting_id).map(|loaded_polls| {
         loaded_polls
-            .iter()
+            .into_iter()
             .map(|poll| get_voting_dto::GetVotingPollsResponse {
-                poll_id: String::from(&*poll.id),
-                name: String::from(&*poll.name),
-                description: String::from(&*poll.description),
                 status: get_status_from_poll(&poll),
+                poll_id: poll.id,
+                name: poll.name,
+                description: poll.description,
                 votes_accept: poll.votes_accept,
                 votes_decline: poll.votes_decline,
                 votes_abstain: poll.votes_abstain,

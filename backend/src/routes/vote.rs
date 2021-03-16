@@ -17,9 +17,9 @@ pub fn cors_set_vote(voting_id: String, poll_index: i32) -> String {
 }
 
 #[post(
-"/votings/<voting_id>/polls/<poll_index>/vote",
-format = "json",
-data = "<input>"
+    "/votings/<voting_id>/polls/<poll_index>/vote",
+    format = "json",
+    data = "<input>"
 )]
 pub fn set_vote(
     conn: DbConn,

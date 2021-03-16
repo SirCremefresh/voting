@@ -59,6 +59,7 @@ export default {
                     apiUrl,
                 }
             }),
+            preventAssignment: true
         }),
 
         // If you have external dependencies installed from

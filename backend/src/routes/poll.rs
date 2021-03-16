@@ -8,9 +8,9 @@ use crate::dtos::{get_active_poll_dto, set_active_poll_dto};
 use crate::utils::{AuthenticatedUser, ErrorResponse};
 use crate::validators::validate_voting_id;
 
+use crate::models::Vote;
 use rocket::http::Status;
 use rocket_contrib::json::Json;
-use crate::models::Vote;
 
 #[options("/votings/<voting_id>/polls/active")]
 pub fn cors_active_poll(voting_id: String) -> String {
@@ -80,8 +80,7 @@ pub fn get_active_poll(
     let poll = &polls[active_poll_index as usize];
 
     let voter = find_voter(&conn, &user)?;
-    let voted = find_vote(&conn, &poll.id, &voter.id)?
-        .map(|vote| get_answered_from_vote(&vote));
+    let voted = find_vote(&conn, &poll.id, &voter.id)?.map(|vote| get_answered_from_vote(&vote));
 
     Ok(Json(Some(get_active_poll_dto::GetActivePollResponse {
         poll_index: active_poll_index,
@@ -96,5 +95,6 @@ fn get_answered_from_vote(vote: &Vote) -> String {
         None => "ABSTAIN",
         Some(true) => "ACCEPT",
         Some(false) => "DECLINE",
-    }.to_string()
+    }
+    .to_string()
 }

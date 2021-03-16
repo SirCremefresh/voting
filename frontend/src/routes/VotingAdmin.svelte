@@ -2,7 +2,7 @@
     import {parseQuery} from "../location";
     import CopyClipBoard from "../CopyClipBoard.svelte";
     import {getData, postData} from "../api";
-    import {onMount} from 'svelte';
+    import {onMount, onDestroy} from 'svelte';
 
     let voting = {
         votingId: "",
@@ -67,6 +67,15 @@
     } else {
         onMount(async () => {
             await loadVoting();
+            const updateInterval = setInterval(async () => {
+                await loadVoting();
+            }, 1000);
+
+            onDestroy(() => {
+                if (updateInterval) {
+                    clearInterval(updateInterval);
+                }
+            })
         });
     }
 
