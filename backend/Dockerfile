@@ -12,13 +12,11 @@ ADD . ./
 
 RUN cargo build --release
 
-FROM debian:jessie
-
-RUN apt-get update && apt-get install -y libpq-dev
+FROM gcr.io/distroless/cc
 
 COPY --from=builder \
   /target/release/voting \
   /usr/local/bin/
 
 WORKDIR /root
-CMD ROCKET_PORT=$PORT /usr/local/bin/voting
+CMD ["/usr/local/bin/voting"]
