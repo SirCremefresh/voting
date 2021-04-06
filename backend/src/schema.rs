@@ -40,9 +40,4 @@ joinable!(voters -> votings (voting_fk));
 joinable!(votes -> polls (poll_fk));
 joinable!(votes -> voters (voter_fk));
 
-allow_tables_to_appear_in_same_query!(
-    polls,
-    voters,
-    votes,
-    votings,
-);
+allow_tables_to_appear_in_same_query!(polls, voters, votes, votings,);

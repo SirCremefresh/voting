@@ -11,15 +11,10 @@ use crate::validators::validate_voting_id;
 use rocket::http::Status;
 use rocket_contrib::json::Json;
 
-#[options("/votings/<voting_id>/polls/<poll_index>/vote")]
-pub fn cors_set_vote(voting_id: String, poll_index: i32) -> String {
-    format!("/votings/{}/polls/{}/vote", voting_id, poll_index)
-}
-
 #[post(
-"/votings/<voting_id>/polls/<poll_index>/vote",
-format = "json",
-data = "<input>"
+    "/votings/<voting_id>/polls/<poll_index>/vote",
+    format = "json",
+    data = "<input>"
 )]
 pub fn set_vote(
     conn: DbConn,
