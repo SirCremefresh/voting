@@ -61,7 +61,19 @@ fn main() {
             .expect("connection instance"),
     )
     .expect("Could run migrations");
-    rocket::ignite()
+
+    let config = Config::build(Environment::Staging)
+        .address(env::var("ADDRESS").unwrap_or("0.0.0.0".to_string()))
+        .port(
+            env::var("PORT")
+                .unwrap_or("8080".to_string())
+                .parse::<u16>()
+                .unwrap(),
+        )
+        .finalize()
+        .unwrap();
+
+    rocket::custom(config)
         .manage(postgre_connection_poll)
         .mount(
             "/api",
