@@ -36,6 +36,8 @@ use std::env;
 use std::io::Write;
 
 use routes::{poll, vote, voter, voting};
+use rocket::Config;
+use rocket::config::Environment;
 
 fn main() {
     dotenv().ok();
